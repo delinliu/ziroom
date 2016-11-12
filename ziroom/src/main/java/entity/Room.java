@@ -4,6 +4,9 @@ public class Room {
 
     private String roomId;
 
+    // 房间编号（如：05卧）
+    private String number;
+
     // 房间面积
     private int area;
 
@@ -31,6 +34,14 @@ public class Room {
 
     public void setRoomId(String roomId) {
         this.roomId = roomId;
+    }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
     }
 
     public int getArea() {

@@ -6,6 +6,12 @@ public class House {
 
     private String houseId;
 
+    // 房间名称（云山星座苑4居室）
+    private String detailName;
+
+    // [浦东 金杨] 6号线 云山路
+    private String notDetailName;
+
     // 户型
     private String layout;
 
@@ -27,6 +33,22 @@ public class House {
 
     public void setHouseId(String houseId) {
         this.houseId = houseId;
+    }
+
+    public String getDetailName() {
+        return detailName;
+    }
+
+    public void setDetailName(String detailName) {
+        this.detailName = detailName;
+    }
+
+    public String getNotDetailName() {
+        return notDetailName;
+    }
+
+    public void setNotDetailName(String notDetailName) {
+        this.notDetailName = notDetailName;
     }
 
     public String getLayout() {

@@ -3,7 +3,7 @@ package http_fetcher;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class HttpFetcherExceptionTest {
+public class SimpleHttpFetcherTest {
 
     static final String normalUrl = "http://sh.ziroom.com/";
     static final String notFoundUrl = "http://sh.ziroom.com/notfound";
