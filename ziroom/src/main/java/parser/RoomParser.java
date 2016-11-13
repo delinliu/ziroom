@@ -15,6 +15,7 @@ import entity.House;
 import entity.Location;
 import entity.Price;
 import entity.Room;
+import entity.State;
 import entity.Style;
 
 public class RoomParser implements Parser {
@@ -50,6 +51,10 @@ public class RoomParser implements Parser {
     final public static String errRoomTagsStyleNotUnique = "Class [room_tags:style] is not unique.";
     final public static String errRoomTagsStyleFormat = "Style format error.";
 
+    final public static String errRoomStateRoomBtnsNotUnique = "Class [room_btns] is not unique.";
+    final public static String errRoomStateASize0 = "Amount of tag [a] under [room_btns] is not 0.";
+    final public static String errRoomStateFormat = "Room state format error.";
+
     private boolean isUnique(Elements eles) {
         return eles != null && eles.size() == 1;
     }
@@ -70,10 +75,45 @@ public class RoomParser implements Parser {
         parseRoomDetail(house, room, document);
         parseRoomPrices(house, room, document);
         parseRoomTags(house, room, document);
+        parseRoomState(house, room, document);
 
         // TODO: Other parse actions
 
         return room;
+    }
+
+    /**
+     *  <xxx class="room_btns">
+     *      <a>
+     *          已出租
+     *      </a>
+     *      <a>
+     *          ...
+     *      </a>
+     *  </xxx>
+     */
+    private void parseRoomState(House house, Room room, Document document) throws ParserException {
+
+        Elements roomTags = document.getElementsByClass("room_btns");
+        if (!isUnique(roomTags)) {
+            throw new ParserException(errRoomStateRoomBtnsNotUnique);
+        }
+
+        Elements as = roomTags.get(0).getElementsByTag("a");
+        if (as.isEmpty()) {
+            throw new ParserException(errRoomStateASize0);
+        }
+
+        String stateText = as.get(0).ownText().trim();
+        if ("已出租".equals(stateText)) {
+            room.setState(State.Unavailable);
+        } else if ("我要看房".equals(stateText)) {
+            room.setState(State.Available);
+        } else {
+            throw new ParserException(errRoomStateFormat);
+        }
+
+        System.out.println(room.getState());
     }
 
     /**

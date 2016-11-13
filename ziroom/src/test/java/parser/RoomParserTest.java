@@ -20,6 +20,37 @@ public class RoomParserTest {
 
         parser.parseRoom(content.replaceAll("<p class=\"room_tags clearfix\">",
                 "<p class=\"room_tags clearfix\"><span class=\"balcony\"></span><span class=\"toilet\"></span>"));
+
+        parser.parseRoom(content.replaceAll("我要看房", "已出租"));
+    }
+
+    @Test
+    public void testParseRoomStateException() throws IOException {
+
+        RoomParser parser = new RoomParser();
+        String normalContent = Util.readFile(availableRoomPath);
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("class=\"room_btns", "class=\"room_btns_xxx"));
+            Assert.assertTrue(false);
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomStateRoomBtnsNotUnique, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("<div class=\"room_btns clearfix\">",
+                    "<div class=\"room_btns clearfix\"></div><div>"));
+            Assert.assertTrue(false);
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomStateASize0, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("我要看房", "???"));
+            Assert.assertTrue(false);
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomStateFormat, e.getMessage());
+        }
     }
 
     @Test
