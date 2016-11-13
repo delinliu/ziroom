@@ -1,10 +1,17 @@
 package parser;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import entity.House;
+import entity.Location;
+import entity.Price;
+import entity.Room;
+import entity.State;
+import entity.Style;
 import util.Util;
 
 public class RoomParserTest {
@@ -16,12 +23,70 @@ public class RoomParserTest {
 
         String content = Util.readFile(availableRoomPath);
         RoomParser parser = new RoomParser();
-        parser.parseRoom(content);
 
-        parser.parseRoom(content.replaceAll("<p class=\"room_tags clearfix\">",
+        Room room = parser.parseRoom(content);
+        Assert.assertEquals(1130, room.getArea());
+        Assert.assertEquals("02卧", room.getNumber());
+        Assert.assertEquals("南", room.getOrientation());
+        Assert.assertEquals("60300024", room.getRoomId());
+        Assert.assertEquals(State.Available, room.getState());
+        Assert.assertFalse(room.isSeparateBalcony());
+        Assert.assertFalse(room.isSeparateBathroom());
+
+        List<Price> prices = room.getPrices();
+        Assert.assertNotNull(prices);
+        Assert.assertEquals(4, prices.size());
+        Price firstPrice = prices.get(0);
+        Assert.assertEquals(2160, firstPrice.getDeposit());
+        Assert.assertEquals("月付", firstPrice.getDesc());
+        Assert.assertEquals(2160, firstPrice.getRentPerMonth());
+        Assert.assertEquals(2592, firstPrice.getServicePerYear());
+
+        Style style = room.getStyle();
+        Assert.assertNotNull(style);
+        Assert.assertEquals("布丁", style.getStyle());
+        Assert.assertEquals(40, style.getVersion());
+
+        House house = room.getHouse();
+        Assert.assertNotNull(house);
+        Assert.assertEquals("黄山新村3居室", house.getDetailName());
+        Assert.assertEquals("60049455", house.getHouseId());
+        Assert.assertEquals("3室1厅", house.getLayout());
+        Assert.assertEquals("[浦东 金杨] 6号线 云山路", house.getNotDetailName());
+        Assert.assertEquals(3, house.getBedroom());
+        Assert.assertEquals(4, house.getCurrentFloor());
+        Assert.assertEquals(1, house.getLivingroom());
+        Assert.assertEquals(6, house.getTotalFloor());
+
+        List<Location> locations = house.getLocations();
+        Assert.assertNotNull(locations);
+        Assert.assertEquals(3, locations.size());
+        Location firstLocation = locations.get(0);
+        Assert.assertEquals(435, firstLocation.getDistance());
+        Assert.assertEquals(6, firstLocation.getLine());
+        Assert.assertEquals("云山路", firstLocation.getStationName());
+
+        room = parser.parseRoom(content.replaceAll("<p class=\"room_tags clearfix\">",
                 "<p class=\"room_tags clearfix\"><span class=\"balcony\"></span><span class=\"toilet\"></span>"));
+        Assert.assertTrue(room.isSeparateBalcony());
+        Assert.assertTrue(room.isSeparateBathroom());
 
-        parser.parseRoom(content.replaceAll("我要看房", "已出租"));
+        room = parser.parseRoom(content.replaceAll("我要看房", "已出租"));
+        Assert.assertEquals(State.Unavailable, room.getState());
+    }
+
+    @Test
+    public void testParseRoomAndHouseId() throws IOException {
+
+        RoomParser parser = new RoomParser();
+        String normalContent = Util.readFile(availableRoomPath);
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("id=\"room_id\"", ""));
+            Assert.assertTrue(false);
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomOrHouseId, e.getMessage());
+        }
     }
 
     @Test

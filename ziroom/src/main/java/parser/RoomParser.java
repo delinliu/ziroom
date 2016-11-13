@@ -55,6 +55,8 @@ public class RoomParser implements Parser {
     final public static String errRoomStateASize0 = "Amount of tag [a] under [room_btns] is not 0.";
     final public static String errRoomStateFormat = "Room state format error.";
 
+    final public static String errRoomOrHouseId = "Room id or house id is empty.";
+
     private boolean isUnique(Elements eles) {
         return eles != null && eles.size() == 1;
     }
@@ -76,10 +78,21 @@ public class RoomParser implements Parser {
         parseRoomPrices(house, room, document);
         parseRoomTags(house, room, document);
         parseRoomState(house, room, document);
-
-        // TODO: Other parse actions
+        parseRoomAndHouseId(house, room, document);
 
         return room;
+    }
+
+    private void parseRoomAndHouseId(House house, Room room, Document document) throws ParserException {
+
+        Element roomId = document.getElementById("room_id");
+        Element houseId = document.getElementById("house_id");
+        if (roomId == null || houseId == null) {
+            throw new ParserException(errRoomOrHouseId);
+        }
+
+        house.setHouseId(houseId.attr("value"));
+        room.setRoomId(roomId.attr("value"));
     }
 
     /**
@@ -112,8 +125,6 @@ public class RoomParser implements Parser {
         } else {
             throw new ParserException(errRoomStateFormat);
         }
-
-        System.out.println(room.getState());
     }
 
     /**
@@ -379,8 +390,8 @@ public class RoomParser implements Parser {
         }
 
         String layout = matcher.group(1);
-        int livingroom = Integer.parseInt(matcher.group(2));
-        int bedroom = Integer.parseInt(matcher.group(3));
+        int livingroom = Integer.parseInt(matcher.group(3));
+        int bedroom = Integer.parseInt(matcher.group(2));
         house.setLayout(layout);
         house.setLivingroom(livingroom);
         house.setBedroom(bedroom);
@@ -442,6 +453,7 @@ public class RoomParser implements Parser {
             location.setLine(line);
             location.setStationName(stationName);
             location.setDistance(distance);
+            locations.add(location);
         }
         house.setLocations(locations);
     }
