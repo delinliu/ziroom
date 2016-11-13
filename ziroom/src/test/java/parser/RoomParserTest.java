@@ -25,6 +25,43 @@ public class RoomParserTest {
         String content = Util.readFile(availableRoomPath);
         RoomParser parser = new RoomParser();
         parser.parseRoom(content);
+
+        parser.parseRoom(content.replaceAll("<p class=\"room_tags clearfix\">",
+                "<p class=\"room_tags clearfix\"><span class=\"balcony\"></span><span class=\"toilet\"></span>"));
+    }
+
+    @Test
+    public void testParseRoomTagsException() throws IOException {
+
+        RoomParser parser = new RoomParser();
+        String normalContent = Util.readFile(availableRoomPath);
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("class=\"room_tags", "class=\"room_tags_xxx"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomTagsNotUqniue, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("<p class=\"room_tags clearfix\">",
+                    "<p class=\"room_tags clearfix\"><span></span>"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomTagsUnknownClass, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("<p class=\"room_tags clearfix\">",
+                    "<p class=\"room_tags clearfix\"><span class=\"style\"></span>"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomTagsStyleNotUnique, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("<span class=\"style\">风格4\\.0 布丁</span>",
+                    "<span class=\"style\">风格?.0 布丁</span>"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomTagsStyleFormat, e.getMessage());
+        }
     }
 
     @Test

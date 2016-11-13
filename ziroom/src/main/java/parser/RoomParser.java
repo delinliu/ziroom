@@ -15,6 +15,7 @@ import entity.House;
 import entity.Location;
 import entity.Price;
 import entity.Room;
+import entity.Style;
 
 public class RoomParser implements Parser {
 
@@ -44,6 +45,11 @@ public class RoomParser implements Parser {
     final public static String errRoomPriceDeposit = "Room price deposit format error.";
     final public static String errRoomPriceService = "Room price service format error.";
 
+    final public static String errRoomTagsNotUqniue = "Class [room_tags] is not unique.";
+    final public static String errRoomTagsUnknownClass = "Unknown class in [room_tags] span.";
+    final public static String errRoomTagsStyleNotUnique = "Class [room_tags:style] is not unique.";
+    final public static String errRoomTagsStyleFormat = "Style format error.";
+
     private boolean isUnique(Elements eles) {
         return eles != null && eles.size() == 1;
     }
@@ -61,14 +67,64 @@ public class RoomParser implements Parser {
         room.setHouse(house);
 
         parseRoomNames(house, room, document);
-
         parseRoomDetail(house, room, document);
-
         parseRoomPrices(house, room, document);
+        parseRoomTags(house, room, document);
 
         // TODO: Other parse actions
 
         return room;
+    }
+
+    /**
+     *  Parse [is_separate_bathroom], [is_separate_balcony], [style.version], [style.style].
+     *  
+     *  <xxx class="room_tags">
+     *      <span class="subway">地铁10分钟</span>
+     *      <span class="balcony">独立阳台</span>
+     *      <span class="toilet">独卫</span>
+     *      <span class="style">风格4.0 布丁</span>
+     *  </xxx>
+     */
+    private void parseRoomTags(House house, Room room, Document document) throws ParserException {
+
+        Elements roomTags = document.getElementsByClass("room_tags");
+        if (!isUnique(roomTags)) {
+            throw new ParserException(errRoomTagsNotUqniue);
+        }
+
+        Element roomTag = roomTags.get(0);
+
+        Elements spans = roomTag.getElementsByTag("span");
+        for (Element span : spans) {
+            if (!span.attr("class").matches("subway|toilet|balcony|style")) {
+                throw new ParserException(errRoomTagsUnknownClass);
+            }
+        }
+
+        if (isUnique(roomTag.getElementsByClass("toilet"))) {
+            room.setSeparateBathroom(true);
+        }
+        if (isUnique(roomTag.getElementsByClass("balcony"))) {
+            room.setSeparateBalcony(true);
+        }
+
+        Elements styles = roomTag.getElementsByClass("style");
+        if (!isUnique(styles)) {
+            throw new ParserException(errRoomTagsStyleNotUnique);
+        }
+        String styleText = styles.get(0).text();
+        Matcher matcher = Pattern.compile("风格([0-9]+\\.[0-9]+) *(.*)").matcher(styleText);
+        if (!matcher.find()) {
+            throw new ParserException(errRoomTagsStyleFormat);
+        }
+
+        int version = (int) (Double.parseDouble(matcher.group(1)) * 10);
+        String style = matcher.group(2);
+        Style roomStyle = new Style();
+        roomStyle.setVersion(version);
+        roomStyle.setStyle(style);
+        room.setStyle(roomStyle);
     }
 
     /**
