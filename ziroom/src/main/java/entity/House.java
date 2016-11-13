@@ -6,14 +6,20 @@ public class House {
 
     private String houseId;
 
-    // 房间名称（云山星座苑4居室）
+    // 房间名称（如：云山星座苑4居室）
     private String detailName;
 
-    // [浦东 金杨] 6号线 云山路
+    // 小区位置（如：[浦东 金杨] 6号线 云山路）
     private String notDetailName;
 
-    // 户型
+    // 户型（如：3室2厅）
     private String layout;
+
+    // 卧室数
+    private int bedroom;
+
+    // 客厅数
+    private int livingroom;
 
     // 楼层
     private int currentFloor;
@@ -57,6 +63,22 @@ public class House {
 
     public void setLayout(String layout) {
         this.layout = layout;
+    }
+
+    public int getBedroom() {
+        return bedroom;
+    }
+
+    public void setBedroom(int bedroom) {
+        this.bedroom = bedroom;
+    }
+
+    public int getLivingroom() {
+        return livingroom;
+    }
+
+    public void setLivingroom(int livingroom) {
+        this.livingroom = livingroom;
     }
 
     public int getCurrentFloor() {

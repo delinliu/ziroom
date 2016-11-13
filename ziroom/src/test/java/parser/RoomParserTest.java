@@ -1,8 +1,5 @@
 package parser;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 
 import org.junit.Assert;
@@ -31,7 +28,63 @@ public class RoomParserTest {
     }
 
     @Test
-    public void testParseRoomException() throws IOException {
+    public void testParseRoomDetailException() throws IOException {
+
+        RoomParser parser = new RoomParser();
+        String normalContent = Util.readFile(availableRoomPath);
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("class=\"detail_room\"", "class=\"detail_room_xxx\""));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomDetailNotUnique, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("<li><b></b>朝向： 南</li>", ""));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomDetailLiSizeNot5, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("面积： 11\\.3㎡", "面积：㎡"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomDetailArea, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("朝向： 南", "朝向： 不知道"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomDetailOrientation, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("户型： 3室1厅", "户型： ?室?厅"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomDetailLayout, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("楼层： 04/6层", "楼层： ?/6层"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomDetailFloor, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("交通：", "??："));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomDetailLocation, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("距6号线云山路435米", "距?号线云山路435米"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomDetailLocationDetail, e.getMessage());
+        }
+
+    }
+
+    @Test
+    public void testParseRoomNameException() throws IOException {
 
         RoomParser parser = new RoomParser();
 
