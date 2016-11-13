@@ -1,5 +1,7 @@
 package entity;
 
+import java.util.List;
+
 public class Room {
 
     private String roomId;
@@ -27,6 +29,9 @@ public class Room {
 
     // 房间状态
     private State state;
+
+    // 价格
+    private List<Price> prices;
 
     public String getRoomId() {
         return roomId;
@@ -98,6 +103,14 @@ public class Room {
 
     public void setState(State state) {
         this.state = state;
+    }
+
+    public List<Price> getPrices() {
+        return prices;
+    }
+
+    public void setPrices(List<Price> prices) {
+        this.prices = prices;
     }
 
 }

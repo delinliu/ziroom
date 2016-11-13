@@ -30,9 +30,6 @@ public class House {
     // 距离地铁站的距离
     private List<Location> locations;
 
-    // 价格
-    private List<Price> prices;
-
     public String getHouseId() {
         return houseId;
     }
@@ -103,14 +100,6 @@ public class House {
 
     public void setLocations(List<Location> locations) {
         this.locations = locations;
-    }
-
-    public List<Price> getPrices() {
-        return prices;
-    }
-
-    public void setPrices(List<Price> prices) {
-        this.prices = prices;
     }
 
 }

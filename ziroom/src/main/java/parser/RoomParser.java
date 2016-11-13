@@ -54,11 +54,46 @@ public class RoomParser implements Parser {
 
         parseRoomDetail(house, room, document);
 
+        parseRoomPrices(house, room, document);
+
         // TODO: Other parse actions
 
         return room;
     }
 
+    private void parseRoomPrices(House house, Room room, Document document) throws ParserException {
+
+    }
+
+    /**
+     *  Parse [area], [orientation], [layout], [floor], [location] fields.
+     *  Every filed of them must be not blank. Fill them into House and Room.
+     *   
+     *  <xxx class="detail_room">
+     *      <li>
+     *          面积： 15.4㎡
+     *      </li>
+     *      <li>
+     *          朝向： 南
+     *      </li>
+     *      <li>
+     *          户型： 3室1厅
+     *      </li>
+     *      <li>
+     *          楼层： 06/6层
+     *      </li>
+     *      <li>
+     *          交通： 
+     *          <span id="lineList">
+     *              距6号线云山路432米
+     *              <span>
+     *                  <p>距6号线金桥路1038米</p>
+     *                  <p>距6号线德平路1142米</p>
+     *              </span
+     *          </span>
+     *      </li>
+     *  </xxx>
+     */
     private void parseRoomDetail(House house, Room room, Document document) throws ParserException {
 
         Elements detail = document.getElementsByClass("detail_room");
@@ -79,6 +114,9 @@ public class RoomParser implements Parser {
 
     }
 
+    /**
+     * 面积： 15.4㎡
+     */
     private void parseRoomDetailArea(House house, Room room, Element element) throws ParserException {
         String areaText = element.text().trim();
         Matcher matcher = Pattern.compile("面积： *([0-9]+(|\\.[0-9]+))㎡").matcher(areaText);
@@ -90,6 +128,9 @@ public class RoomParser implements Parser {
         room.setArea(area);
     }
 
+    /**
+     * 朝向： 南
+     */
     private void parseRoomDetailOrientation(House house, Room room, Element element) throws ParserException {
         String orientationText = element.text().trim();
         Matcher matcher = Pattern.compile("朝向： *([东南西北]+)").matcher(orientationText);
@@ -101,6 +142,9 @@ public class RoomParser implements Parser {
         room.setOrientation(orientation);
     }
 
+    /**
+     * 户型： 3室1厅
+     */
     private void parseRoomDetailLayout(House house, Room room, Element element) throws ParserException {
         String orientationText = element.ownText().trim();
         Matcher matcher = Pattern.compile("户型： *(([0-9]+)室([0-9]+)厅)").matcher(orientationText);
@@ -116,6 +160,9 @@ public class RoomParser implements Parser {
         house.setBedroom(bedroom);
     }
 
+    /**
+     * 楼层： 06/6层
+     */
     private void parseRoomDetailFloor(House house, Room room, Element element) throws ParserException {
         String floorText = element.text().trim();
         Matcher matcher = Pattern.compile("楼层： *([0-9]+)/([0-9]+)层").matcher(floorText);
@@ -129,6 +176,18 @@ public class RoomParser implements Parser {
         house.setTotalFloor(totalFloor);
     }
 
+    /**
+     *  <li>
+     *      交通： 
+     *      <span id="lineList">
+     *          距6号线云山路432米
+     *          <span>
+     *              <p>距6号线金桥路1038米</p>
+     *              <p>距6号线德平路1142米</p>
+     *          </span
+     *      </span>
+     *  </li>
+     */
     private void parseRoomDetailLocation(House house, Room room, Element element) throws ParserException {
         String locationHeadText = element.ownText().trim();
         if (!"交通：".equals(locationHeadText)) {
