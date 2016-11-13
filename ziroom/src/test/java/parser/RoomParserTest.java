@@ -28,6 +28,61 @@ public class RoomParserTest {
     }
 
     @Test
+    public void testParseRoomPricesException() throws IOException {
+
+        RoomParser parser = new RoomParser();
+        String normalContent = Util.readFile(availableRoomPath);
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("class=\"payCon\"", "class=\"payCon_xxx\""));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomPricesPayConNotUnique, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("<table>", "<table><tr></tr>"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomPricesTrSizeNot5, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("服务费", ""));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomPriceHeader, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("<td>￥2160/月</td>", ""));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomPrice, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("半年付", "unknown"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomPriceDesc, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("<td>￥2160/月</td>", "<td>￥???/月</td>"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomPriceRent, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("<td>￥2160</td>", "<td>￥???</td>"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomPriceDeposit, e.getMessage());
+        }
+
+        try {
+            parser.parseRoom(normalContent.replaceAll("2592元/年", "???元/年"));
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomPriceService, e.getMessage());
+        }
+    }
+
+    @Test
     public void testParseRoomDetailException() throws IOException {
 
         RoomParser parser = new RoomParser();

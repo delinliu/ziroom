@@ -13,6 +13,7 @@ import org.jsoup.select.Elements;
 
 import entity.House;
 import entity.Location;
+import entity.Price;
 import entity.Room;
 
 public class RoomParser implements Parser {
@@ -33,6 +34,15 @@ public class RoomParser implements Parser {
     final public static String errRoomDetailFloor = "Room floor format error.";
     final public static String errRoomDetailLocation = "Room location format error.";
     final public static String errRoomDetailLocationDetail = "Room location detail format error.";
+
+    final public static String errRoomPricesPayConNotUnique = "Class [payCon] is not unique.";
+    final public static String errRoomPricesTrSizeNot5 = "Amount of tag [tr] under [payCon] is not 5.";
+    final public static String errRoomPriceHeader = "Room price header format error.";
+    final public static String errRoomPrice = "Room price format error.";
+    final public static String errRoomPriceDesc = "Room price desc format error.";
+    final public static String errRoomPriceRent = "Room price rent format error.";
+    final public static String errRoomPriceDeposit = "Room price deposit format error.";
+    final public static String errRoomPriceService = "Room price service format error.";
 
     private boolean isUnique(Elements eles) {
         return eles != null && eles.size() == 1;
@@ -61,8 +71,128 @@ public class RoomParser implements Parser {
         return room;
     }
 
+    /**
+     *  Parse [prices] for a room.
+     *  Every filed of them must be not blank. Fill them into House and Room.
+     *  
+     *  <xxx>
+     *      <table>
+     *          <tr>
+     *              <th>方式</th>
+     *              <th>租金</th>
+     *              <th>押金</th>
+     *              <th>服务费</th>
+     *          </tr>
+     *          <tr>
+     *              <td>月付</td>
+     *              <td>￥2590/月</td>
+     *              <td>￥2590</td>
+     *              <td>￥3108元/年</td>
+     *          </tr>
+     *          <tr>
+     *              <td>季付</td>
+     *              <td>￥2460/月</td>
+     *              <td>￥2460</td>
+     *              <td>￥2952元/年</td>
+     *          </tr>
+     *          <tr>
+     *              <td>季付</td>
+     *              <td>￥2460/月</td>
+     *              <td>￥2460</td>
+     *              <td>￥2509元/年</td>
+     *          </tr>
+     *          <tr>
+     *              <td>季付</td>
+     *              <td>￥2460/月</td>
+     *              <td>￥2460</td>
+     *              <td>￥2066元/年</td>
+     *          </tr>
+     *      </table>
+     *  </xxx>
+     */
     private void parseRoomPrices(House house, Room room, Document document) throws ParserException {
 
+        Elements payCon = document.getElementsByClass("payCon");
+        if (!isUnique(payCon)) {
+            throw new ParserException(errRoomPricesPayConNotUnique);
+        }
+
+        Elements trs = payCon.get(0).getElementsByTag("tr");
+        if (!isSizeEqual(trs, 5)) {
+            throw new ParserException(errRoomPricesTrSizeNot5);
+        }
+
+        parseRoomPricesHeader(trs.get(0));
+
+        room.setPrices(new ArrayList<Price>());
+        for (int i = 1; i < trs.size(); i++) {
+            parseRoomPrice(house, room, trs.get(i));
+        }
+    }
+
+    /**
+     *  <tr>
+     *      <th>方式</th>
+     *      <th>租金</th>
+     *      <th>押金</th>
+     *      <th>服务费</th>
+     *  </tr>
+     */
+    private void parseRoomPricesHeader(Element element) throws ParserException {
+        Elements ths = element.getElementsByTag("th");
+        if (!isSizeEqual(ths, 4) || !"方式".equals(ths.get(0).text()) || !"租金".equals(ths.get(1).text())
+                || !"押金".equals(ths.get(2).text()) || !"服务费".equals(ths.get(3).text())) {
+            throw new ParserException(errRoomPriceHeader);
+        }
+    }
+
+    /**
+     * 
+     *  <tr>
+     *      <td>月付</td>
+     *      <td>￥2590/月</td>
+     *      <td>￥2590</td>
+     *      <td>￥3108元/年</td>
+     *  </tr>
+     */
+    private void parseRoomPrice(House house, Room room, Element element) throws ParserException {
+        Elements tds = element.getElementsByTag("td");
+        if (!isSizeEqual(tds, 4)) {
+            throw new ParserException(errRoomPrice);
+        }
+        String descText = tds.get(0).text().trim();
+        String rentText = tds.get(1).text().trim();
+        String depositText = tds.get(2).text().trim();
+        String serviceText = tds.get(3).text().trim();
+
+        if (!descText.matches("(月|季|半年|年)付")) {
+            throw new ParserException(errRoomPriceDesc);
+        }
+
+        Matcher matcher = Pattern.compile("￥ *([0-9]+)/月").matcher(rentText);
+        if (!matcher.find()) {
+            throw new ParserException(errRoomPriceRent);
+        }
+        int rentPerMonth = Integer.parseInt(matcher.group(1));
+
+        matcher = Pattern.compile("￥ *([0-9]+)").matcher(depositText);
+        if (!matcher.find()) {
+            throw new ParserException(errRoomPriceDeposit);
+        }
+        int deposit = Integer.parseInt(matcher.group(1));
+
+        matcher = Pattern.compile("￥ *([0-9]+)元/年").matcher(serviceText);
+        if (!matcher.find()) {
+            throw new ParserException(errRoomPriceService);
+        }
+        int servicePerYear = Integer.parseInt(matcher.group(1));
+
+        Price price = new Price();
+        price.setDesc(descText);
+        price.setRentPerMonth(rentPerMonth);
+        price.setDeposit(deposit);
+        price.setServicePerYear(servicePerYear);
+        room.getPrices().add(price);
     }
 
     /**
