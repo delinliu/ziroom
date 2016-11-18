@@ -20,6 +20,8 @@ import entity.Style;
 
 public class RoomParser implements RoomParserInterface {
 
+    final public static String errRoomNotFound = "No room found.";
+
     final public static String errRoomNameNotUnique = "Tag of class [room_name] is not unique.";
     final public static String errH2NotUniqueOfRoomName = "Tag [h2] under tag of class [room_name] is not unique.";
     final public static String errRoomNameBlank = "Text of [room_name:h2] is blank";
@@ -68,6 +70,10 @@ public class RoomParser implements RoomParserInterface {
     @Override
     public Room parseRoom(String content) throws ParserException {
 
+        if (isNoRoom(content)) {
+            throw new ParserException(errRoomNotFound);
+        }
+
         Document document = Jsoup.parse(content);
         House house = new House();
         Room room = new Room();
@@ -81,6 +87,10 @@ public class RoomParser implements RoomParserInterface {
         parseRoomAndHouseId(house, room, document);
 
         return room;
+    }
+
+    private boolean isNoRoom(String content) {
+        return "<script>window.location.href='/tips/noRoom.html';</script>".equals(content.trim());
     }
 
     private void parseRoomAndHouseId(House house, Room room, Document document) throws ParserException {

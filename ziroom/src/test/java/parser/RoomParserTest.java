@@ -17,6 +17,7 @@ import util.Util;
 public class RoomParserTest {
 
     final static String availableRoomPath = "src/test/resource/simulator/available-room.html";
+    final static String availableRoomErrorPath = "src/test/resource/simulator/available-room-error.html";
 
     @Test
     public void testParseRoom() throws IOException, ParserException {
@@ -73,6 +74,20 @@ public class RoomParserTest {
 
         room = parser.parseRoom(content.replaceAll("我要看房", "已出租"));
         Assert.assertEquals(State.Unavailable, room.getState());
+    }
+
+    @Test
+    public void testParseRoomNoRoom() throws IOException {
+
+        RoomParser parser = new RoomParser();
+        String errorContent = Util.readFile(availableRoomErrorPath);
+
+        try {
+            parser.parseRoom(errorContent);
+            Assert.assertTrue(false);
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomParser.errRoomNotFound, e.getMessage());
+        }
     }
 
     @Test
