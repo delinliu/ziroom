@@ -23,8 +23,10 @@ public class ConcurrentSet implements ConcurrentSetInterface {
             if (it.hasNext()) {
                 return it.next();
             } else {
-                oldData.addAll(newData);
-                newData.clear();
+                synchronized (newData) {
+                    oldData.addAll(newData);
+                    newData.clear();
+                }
                 it = oldData.iterator();
                 return it.next();
             }
