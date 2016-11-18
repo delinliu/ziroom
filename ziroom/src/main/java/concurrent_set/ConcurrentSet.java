@@ -1,5 +1,6 @@
 package concurrent_set;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -29,6 +30,25 @@ public class ConcurrentSet implements ConcurrentSetInterface {
                 }
                 it = oldData.iterator();
                 return it.next();
+            }
+        }
+    }
+
+    @Override
+    public void addAll(Collection<String> ids) {
+        synchronized (newData) {
+            newData.addAll(ids);
+        }
+    }
+
+    @Override
+    public int size() {
+        synchronized (oldData) {
+            synchronized (newData) {
+                oldData.addAll(newData);
+                newData.clear();
+                it = oldData.iterator();
+                return oldData.size();
             }
         }
     }

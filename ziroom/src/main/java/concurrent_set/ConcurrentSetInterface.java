@@ -1,5 +1,7 @@
 package concurrent_set;
 
+import java.util.Collection;
+
 public interface ConcurrentSetInterface {
 
     /**
@@ -11,10 +13,20 @@ public interface ConcurrentSetInterface {
     void add(String value);
 
     /**
+     * Add all value of ids to the set.
+     * Thread safe.
+     * 
+     * @param ids
+     */
+    void addAll(Collection<String> ids);
+
+    /**
      * Return the next value. If no next value, return the first value.
      * Thread safe.
      * 
      * @return
      */
     String next();
+
+    int size();
 }
