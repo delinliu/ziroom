@@ -5,7 +5,8 @@ import org.junit.Test;
 
 public class SimpleHttpFetcherTest {
 
-    static final String normalUrl = "http://sh.ziroom.com/";
+    static final String normalUrls[] = { "http://sh.ziroom.com/z/nl/z2-s6%E5%8F%B7%E7%BA%BF.html",
+            "http://sh.ziroom.com/" };
     static final String notFoundUrl = "http://sh.ziroom.com/notfound";
     static final String malformedUrl = "malformed url";
     static final String cannotOpenUrl = "http://something.cannot.open";
@@ -13,7 +14,9 @@ public class SimpleHttpFetcherTest {
     @Test
     public void testFetchContentSuccess() throws HttpFetcherException {
         SimpleHttpFetcher fetcher = new SimpleHttpFetcher();
-        Assert.assertNotNull(fetcher.fetchContent(normalUrl));
+        for (String url : normalUrls) {
+            Assert.assertNotNull(fetcher.fetchContent(url));
+        }
     }
 
     @Test

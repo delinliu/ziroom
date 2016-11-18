@@ -18,7 +18,7 @@ import entity.Room;
 import entity.State;
 import entity.Style;
 
-public class RoomParser implements Parser {
+public class RoomParser implements RoomParserInterface {
 
     final public static String errRoomNameNotUnique = "Tag of class [room_name] is not unique.";
     final public static String errH2NotUniqueOfRoomName = "Tag [h2] under tag of class [room_name] is not unique.";
