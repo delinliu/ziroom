@@ -12,15 +12,31 @@ import org.jsoup.select.Elements;
 
 public class RoomListParser implements RoomListParserInterface {
 
+    final static public String errRoomListNoMore = "No more pages.";
     final static public String errRoomListNoHouseList = "Cannot find id [houseList]";
     final static public String errRoomListNoHouseListLi = "Cannot find [houseList:li]";
     final static public String errRoomListLiAFormat = "Format error, [houseList:li:a]";
     final static public String errRoomListLiASizeNot4 = "Format error, [houseList:li:a] does NOT contain 4 a tag.";
 
+    private boolean isNoMore(Document document) {
+
+        Elements nomsg = document.getElementsByClass("nomsg");
+        if (!nomsg.isEmpty()) {
+            return true;
+        }
+
+        return false;
+    }
+
     @Override
     public Set<String> parseRoomList(String content) throws ParserException {
 
         Document document = Jsoup.parse(content);
+
+        if (isNoMore(document)) {
+            throw new ParserException(errRoomListNoMore);
+        }
+
         Element houseList = document.getElementById("houseList");
         if (houseList == null) {
             throw new ParserException(errRoomListNoHouseList);

@@ -13,6 +13,7 @@ import util.Util;
 public class RoomListParserTest {
 
     final static String roomListPath = "src/test/resource/simulator/room-list.html";
+    final static String roomListErrorPath = "src/test/resource/simulator/room-list-error.html";
 
     @Test
     public void testParse() throws IOException, ParserException {
@@ -27,6 +28,18 @@ public class RoomListParserTest {
                 "60293346", "60299676", "60292861", "60306508", "60310458", "60311337", "60301226", "60311334",
                 "60293347", "60302039", "60300612", "60312569", "60306445", "60300572", "60275020" }));
         Assert.assertEquals(targetSet, roomList);
+    }
+
+    @Test
+    public void testEnd() throws IOException {
+
+        RoomListParserInterface parser = new RoomListParser();
+        String errorContent = Util.readFile(roomListErrorPath);
+        try {
+            parser.parseRoomList(errorContent);
+        } catch (ParserException e) {
+            Assert.assertEquals(RoomListParser.errRoomListNoMore, e.getMessage());
+        }
     }
 
     @Test
