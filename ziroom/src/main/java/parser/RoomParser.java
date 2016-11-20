@@ -132,6 +132,8 @@ public class RoomParser implements RoomParserInterface {
             room.setState(State.Unavailable);
         } else if ("我要看房".equals(stateText)) {
             room.setState(State.Available);
+        } else if ("已下定".equals(stateText)) {
+            room.setState(State.Unavailable);
         } else {
             throw new ParserException(errRoomStateFormat);
         }

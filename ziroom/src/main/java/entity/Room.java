@@ -33,6 +33,14 @@ public class Room {
     // 价格
     private List<Price> prices;
 
+    @Override
+    public String toString() {
+        return "[" + roomId + "] [" + house.getDetailName() + "-" + number + "] ["
+                + house.getLocations().get(0).getLine() + "号线-" + house.getLocations().get(0).getStationName() + "-"
+                + house.getLocations().get(0).getDistance() + "米] [" + prices.get(0).getRentPerMonth() + "¥] ["
+                + area / 100 + "." + area % 100 + "㎡]";
+    }
+
     public String getRoomId() {
         return roomId;
     }
