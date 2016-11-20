@@ -98,7 +98,7 @@ public class RoomParser implements RoomParserInterface {
         Element roomId = document.getElementById("room_id");
         Element houseId = document.getElementById("house_id");
         if (roomId == null || houseId == null) {
-            throw new ParserException(errRoomOrHouseId);
+            throw new ParserException(errRoomOrHouseId, room.getRoomId());
         }
 
         house.setHouseId(houseId.attr("value"));
@@ -119,12 +119,12 @@ public class RoomParser implements RoomParserInterface {
 
         Elements roomTags = document.getElementsByClass("room_btns");
         if (!isUnique(roomTags)) {
-            throw new ParserException(errRoomStateRoomBtnsNotUnique);
+            throw new ParserException(errRoomStateRoomBtnsNotUnique, room.getRoomId());
         }
 
         Elements as = roomTags.get(0).getElementsByTag("a");
         if (as.isEmpty()) {
-            throw new ParserException(errRoomStateASize0);
+            throw new ParserException(errRoomStateASize0, room.getRoomId());
         }
 
         String stateText = as.get(0).ownText().trim();
@@ -135,7 +135,7 @@ public class RoomParser implements RoomParserInterface {
         } else if ("已下定".equals(stateText)) {
             room.setState(State.Unavailable);
         } else {
-            throw new ParserException(errRoomStateFormat);
+            throw new ParserException(errRoomStateFormat, room.getRoomId());
         }
     }
 
@@ -153,7 +153,7 @@ public class RoomParser implements RoomParserInterface {
 
         Elements roomTags = document.getElementsByClass("room_tags");
         if (!isUnique(roomTags)) {
-            throw new ParserException(errRoomTagsNotUqniue);
+            throw new ParserException(errRoomTagsNotUqniue, room.getRoomId());
         }
 
         Element roomTag = roomTags.get(0);
@@ -161,7 +161,7 @@ public class RoomParser implements RoomParserInterface {
         Elements spans = roomTag.getElementsByTag("span");
         for (Element span : spans) {
             if (!span.attr("class").matches("subway|toilet|balcony|style")) {
-                throw new ParserException(errRoomTagsUnknownClass);
+                throw new ParserException(errRoomTagsUnknownClass, room.getRoomId());
             }
         }
 
@@ -174,12 +174,12 @@ public class RoomParser implements RoomParserInterface {
 
         Elements styles = roomTag.getElementsByClass("style");
         if (!isUnique(styles)) {
-            throw new ParserException(errRoomTagsStyleNotUnique);
+            throw new ParserException(errRoomTagsStyleNotUnique, room.getRoomId());
         }
         String styleText = styles.get(0).text();
         Matcher matcher = Pattern.compile("风格([0-9]+\\.[0-9]+) *(.*)").matcher(styleText);
         if (!matcher.find()) {
-            throw new ParserException(errRoomTagsStyleFormat);
+            throw new ParserException(errRoomTagsStyleFormat, room.getRoomId());
         }
 
         int version = (int) (Double.parseDouble(matcher.group(1)) * 10);
@@ -233,15 +233,15 @@ public class RoomParser implements RoomParserInterface {
 
         Elements payCon = document.getElementsByClass("payCon");
         if (!isUnique(payCon)) {
-            throw new ParserException(errRoomPricesPayConNotUnique);
+            throw new ParserException(errRoomPricesPayConNotUnique, room.getRoomId());
         }
 
         Elements trs = payCon.get(0).getElementsByTag("tr");
         if (!isSizeEqual(trs, 5)) {
-            throw new ParserException(errRoomPricesTrSizeNot5);
+            throw new ParserException(errRoomPricesTrSizeNot5, room.getRoomId());
         }
 
-        parseRoomPricesHeader(trs.get(0));
+        parseRoomPricesHeader(house, room, trs.get(0));
 
         room.setPrices(new ArrayList<Price>());
         for (int i = 1; i < trs.size(); i++) {
@@ -257,11 +257,11 @@ public class RoomParser implements RoomParserInterface {
      *      <th>服务费</th>
      *  </tr>
      */
-    private void parseRoomPricesHeader(Element element) throws ParserException {
+    private void parseRoomPricesHeader(House house, Room room, Element element) throws ParserException {
         Elements ths = element.getElementsByTag("th");
         if (!isSizeEqual(ths, 4) || !"方式".equals(ths.get(0).text()) || !"租金".equals(ths.get(1).text())
                 || !"押金".equals(ths.get(2).text()) || !"服务费".equals(ths.get(3).text())) {
-            throw new ParserException(errRoomPriceHeader);
+            throw new ParserException(errRoomPriceHeader, room.getRoomId());
         }
     }
 
@@ -277,7 +277,7 @@ public class RoomParser implements RoomParserInterface {
     private void parseRoomPrice(House house, Room room, Element element) throws ParserException {
         Elements tds = element.getElementsByTag("td");
         if (!isSizeEqual(tds, 4)) {
-            throw new ParserException(errRoomPrice);
+            throw new ParserException(errRoomPrice, room.getRoomId());
         }
         String descText = tds.get(0).text().trim();
         String rentText = tds.get(1).text().trim();
@@ -285,24 +285,24 @@ public class RoomParser implements RoomParserInterface {
         String serviceText = tds.get(3).text().trim();
 
         if (!descText.matches("(月|季|半年|年)付")) {
-            throw new ParserException(errRoomPriceDesc);
+            throw new ParserException(errRoomPriceDesc, room.getRoomId());
         }
 
         Matcher matcher = Pattern.compile("￥ *([0-9]+)/月").matcher(rentText);
         if (!matcher.find()) {
-            throw new ParserException(errRoomPriceRent);
+            throw new ParserException(errRoomPriceRent, room.getRoomId());
         }
         int rentPerMonth = Integer.parseInt(matcher.group(1));
 
         matcher = Pattern.compile("￥ *([0-9]+)").matcher(depositText);
         if (!matcher.find()) {
-            throw new ParserException(errRoomPriceDeposit);
+            throw new ParserException(errRoomPriceDeposit, room.getRoomId());
         }
         int deposit = Integer.parseInt(matcher.group(1));
 
         matcher = Pattern.compile("￥ *([0-9]+)元/年").matcher(serviceText);
         if (!matcher.find()) {
-            throw new ParserException(errRoomPriceService);
+            throw new ParserException(errRoomPriceService, room.getRoomId());
         }
         int servicePerYear = Integer.parseInt(matcher.group(1));
 
@@ -347,12 +347,12 @@ public class RoomParser implements RoomParserInterface {
 
         Elements detail = document.getElementsByClass("detail_room");
         if (!isUnique(detail)) {
-            throw new ParserException(errRoomDetailNotUnique);
+            throw new ParserException(errRoomDetailNotUnique, room.getRoomId());
         }
 
         Elements lis = detail.get(0).getElementsByTag("li");
         if (!isSizeEqual(lis, 5)) {
-            throw new ParserException(errRoomDetailLiSizeNot5);
+            throw new ParserException(errRoomDetailLiSizeNot5, room.getRoomId());
         }
 
         parseRoomDetailArea(house, room, lis.get(0));
@@ -370,7 +370,7 @@ public class RoomParser implements RoomParserInterface {
         String areaText = element.text().trim();
         Matcher matcher = Pattern.compile("面积： *([0-9]+(|\\.[0-9]+))㎡").matcher(areaText);
         if (!matcher.find()) {
-            throw new ParserException(errRoomDetailArea);
+            throw new ParserException(errRoomDetailArea, room.getRoomId());
         }
 
         int area = (int) (Double.parseDouble(matcher.group(1)) * 100);
@@ -384,7 +384,7 @@ public class RoomParser implements RoomParserInterface {
         String orientationText = element.text().trim();
         Matcher matcher = Pattern.compile("朝向： *([东南西北]+)").matcher(orientationText);
         if (!matcher.find()) {
-            throw new ParserException(errRoomDetailOrientation);
+            throw new ParserException(errRoomDetailOrientation, room.getRoomId());
         }
 
         String orientation = matcher.group(1);
@@ -398,7 +398,7 @@ public class RoomParser implements RoomParserInterface {
         String orientationText = element.ownText().trim();
         Matcher matcher = Pattern.compile("户型： *(([0-9]+)室([0-9]+)厅)").matcher(orientationText);
         if (!matcher.find()) {
-            throw new ParserException(errRoomDetailLayout);
+            throw new ParserException(errRoomDetailLayout, room.getRoomId());
         }
 
         String layout = matcher.group(1);
@@ -416,7 +416,7 @@ public class RoomParser implements RoomParserInterface {
         String floorText = element.text().trim();
         Matcher matcher = Pattern.compile("楼层： *([0-9]+)/([0-9]+)层").matcher(floorText);
         if (!matcher.find()) {
-            throw new ParserException(errRoomDetailFloor);
+            throw new ParserException(errRoomDetailFloor, room.getRoomId());
         }
 
         int currentFloor = Integer.parseInt(matcher.group(1));
@@ -440,7 +440,7 @@ public class RoomParser implements RoomParserInterface {
     private void parseRoomDetailLocation(House house, Room room, Element element) throws ParserException {
         String locationHeadText = element.ownText().trim();
         if (!"交通：".equals(locationHeadText)) {
-            throw new ParserException(errRoomDetailLocation);
+            throw new ParserException(errRoomDetailLocation, room.getRoomId());
         }
 
         List<String> lineTexts = new ArrayList<>();
@@ -455,7 +455,7 @@ public class RoomParser implements RoomParserInterface {
             locationText = locationText.trim();
             Matcher matcher = pattern.matcher(locationText);
             if (!matcher.find()) {
-                throw new ParserException(errRoomDetailLocationDetail);
+                throw new ParserException(errRoomDetailLocationDetail, room.getRoomId());
             }
             int line = Integer.parseInt(matcher.group(1));
             String stationName = matcher.group(2);
@@ -487,33 +487,33 @@ public class RoomParser implements RoomParserInterface {
 
         Elements roomNames = document.getElementsByClass("room_name");
         if (!isUnique(roomNames)) {
-            throw new ParserException(errRoomNameNotUnique);
+            throw new ParserException(errRoomNameNotUnique, room.getRoomId());
         }
         Elements h2OfRoomName = roomNames.get(0).getElementsByTag("h2");
         if (!isUnique(h2OfRoomName)) {
-            throw new ParserException(errH2NotUniqueOfRoomName);
+            throw new ParserException(errH2NotUniqueOfRoomName, room.getRoomId());
         }
         String roomName = h2OfRoomName.get(0).text().trim();
         if (StringUtils.isBlank(roomName)) {
-            throw new ParserException(errRoomNameBlank);
+            throw new ParserException(errRoomNameBlank, room.getRoomId());
         }
         int split = roomName.lastIndexOf("-");
         if (split == -1) {
-            throw new ParserException(errRoomNameFormat);
+            throw new ParserException(errRoomNameFormat, room.getRoomId());
         }
         String houseDetailName = roomName.substring(0, split).trim();
         String roomNumber = roomName.substring(split + 1).trim();
         if (StringUtils.isBlank(houseDetailName) || StringUtils.isBlank(roomNumber)) {
-            throw new ParserException(errRoomNameDetailOrNumberEmpty);
+            throw new ParserException(errRoomNameDetailOrNumberEmpty, room.getRoomId());
         }
 
         Elements ellipsis = roomNames.get(0).getElementsByClass("ellipsis");
         if (!isUnique(ellipsis)) {
-            throw new ParserException(errRoomNameEllipsisEmpty);
+            throw new ParserException(errRoomNameEllipsisEmpty, room.getRoomId());
         }
         String houseNotDetailName = ellipsis.get(0).text().trim().replaceAll(" +", " ");
         if (StringUtils.isBlank(houseNotDetailName)) {
-            throw new ParserException(errRoomNameNotDetailEmpty);
+            throw new ParserException(errRoomNameNotDetailEmpty, room.getRoomId());
         }
 
         house.setDetailName(houseDetailName);

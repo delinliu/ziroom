@@ -38,7 +38,7 @@ public class RoomListParserTest {
         try {
             parser.parseRoomList(errorContent);
         } catch (ParserException e) {
-            Assert.assertEquals(RoomListParser.errRoomListNoMore, e.getMessage());
+            Assert.assertEquals(RoomListParser.errRoomListNoMore, e.getBaseMessage());
         }
     }
 
@@ -53,7 +53,7 @@ public class RoomListParserTest {
             parser.parseRoomList(normalContent.replaceAll("id=\"houseList\"", "id=\"houseList_xxx\""));
             Assert.assertTrue(false);
         } catch (ParserException e) {
-            Assert.assertEquals(RoomListParser.errRoomListNoHouseList, e.getMessage());
+            Assert.assertEquals(RoomListParser.errRoomListNoHouseList, e.getBaseMessage());
         }
 
         try {
@@ -62,7 +62,7 @@ public class RoomListParserTest {
                     "<ul id=\"houseList\"></ul><ul id=\"houseList_xxx\">"));
             Assert.assertTrue(false);
         } catch (ParserException e) {
-            Assert.assertEquals(RoomListParser.errRoomListNoHouseListLi, e.getMessage());
+            Assert.assertEquals(RoomListParser.errRoomListNoHouseListLi, e.getBaseMessage());
         }
 
         try {
@@ -71,7 +71,7 @@ public class RoomListParserTest {
                     "//sh\\.ziroom\\.com/z/vr/60275553\\.html"));
             Assert.assertTrue(false);
         } catch (ParserException e) {
-            Assert.assertEquals(RoomListParser.errRoomListLiAFormat, e.getMessage());
+            Assert.assertEquals(RoomListParser.errRoomListLiAFormat, e.getBaseMessage());
         }
 
         try {
@@ -79,7 +79,7 @@ public class RoomListParserTest {
             parser.parseRoomList(normalContent.replaceFirst("//sh\\.ziroom\\.com/z/vr/60275552\\.html", ""));
             Assert.assertTrue(false);
         } catch (ParserException e) {
-            Assert.assertEquals(RoomListParser.errRoomListLiASizeNot4, e.getMessage());
+            Assert.assertEquals(RoomListParser.errRoomListLiASizeNot4, e.getBaseMessage());
         }
     }
 }
