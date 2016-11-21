@@ -50,6 +50,94 @@ public class Database implements DatabaseInterface {
     }
 
     @Override
+    public void moveRoomToHistory(RoomEntity roomEntity) throws InterruptedException, SQLException {
+        int roomIdLocal = roomEntity.getRoomIdLocal();
+        int houseIdLocal = roomEntity.getHouseIdLocal();
+        String roomId = roomEntity.getRoom().getRoomId();
+        String houseId = roomEntity.getRoom().getHouse().getHouseId();
+        Connection connection = connectionQueue.take();
+        connection.setAutoCommit(false);
+        copyHouseToHistory(houseId, connection);
+        copyRoomToHistory(houseIdLocal, roomId, connection);
+        copyPriceToHistory(roomIdLocal, roomId, connection);
+        copyLocationToHistory(houseIdLocal, houseId, connection);
+        deleteLocation(houseId, connection);
+        deletePrice(roomId, connection);
+        deleteRoom(roomId, connection);
+        deleteHouse(houseId, connection);
+        connection.commit();
+        connection.setAutoCommit(true);
+        connectionQueue.put(connection);
+    }
+
+    private void deleteHouse(String houseId, Connection connection) throws SQLException {
+        PreparedStatement statement;
+        String deleteHouseSql = "delete from house where houseId=?";
+        statement = connection.prepareStatement(deleteHouseSql);
+        statement.setString(1, houseId);
+        statement.executeUpdate();
+    }
+
+    private void deleteRoom(String roomId, Connection connection) throws SQLException {
+        PreparedStatement statement;
+        String deleteRoomSql = "delete from room where roomId=?";
+        statement = connection.prepareStatement(deleteRoomSql);
+        statement.setString(1, roomId);
+        statement.executeUpdate();
+    }
+
+    private void deletePrice(String roomId, Connection connection) throws SQLException {
+        PreparedStatement statement;
+        String deletePriceSql = "delete from price where roomId=?";
+        statement = connection.prepareStatement(deletePriceSql);
+        statement.setString(1, roomId);
+        statement.executeUpdate();
+    }
+
+    private void deleteLocation(String houseId, Connection connection) throws SQLException {
+        PreparedStatement statement;
+        String deleteLocationSql = "delete from location where houseId=?";
+        statement = connection.prepareStatement(deleteLocationSql);
+        statement.setString(1, houseId);
+        statement.executeUpdate();
+    }
+
+    private void copyLocationToHistory(int houseIdLocal, String houseId, Connection connection) throws SQLException {
+        PreparedStatement statement;
+        String moveLocationSql = "insert into history_location " + "(select *, ? from location where houseId = ?)";
+        statement = connection.prepareStatement(moveLocationSql);
+        statement.setInt(1, houseIdLocal);
+        statement.setString(2, houseId);
+        statement.executeUpdate();
+    }
+
+    private void copyPriceToHistory(int roomIdLocal, String roomId, Connection connection) throws SQLException {
+        PreparedStatement statement;
+        String movePriceSql = "insert into history_price " + "(select *, ? from price where roomId = ?)";
+        statement = connection.prepareStatement(movePriceSql);
+        statement.setInt(1, roomIdLocal);
+        statement.setString(2, roomId);
+        statement.executeUpdate();
+    }
+
+    private void copyRoomToHistory(int houseIdLocal, String roomId, Connection connection) throws SQLException {
+        PreparedStatement statement;
+        String moveRoomSql = "insert into history_room " + "(select *, ? from room where roomId = ?)";
+        statement = connection.prepareStatement(moveRoomSql);
+        statement.setInt(1, houseIdLocal);
+        statement.setString(2, roomId);
+        statement.executeUpdate();
+    }
+
+    private void copyHouseToHistory(String houseId, Connection connection) throws SQLException {
+        PreparedStatement statement;
+        String moveHouseSql = "insert into history_house" + " (select * from house where houseId = ?)";
+        statement = connection.prepareStatement(moveHouseSql);
+        statement.setString(1, houseId);
+        statement.executeUpdate();
+    }
+
+    @Override
     public void updateRoomEndTime(RoomEntity roomEntity) throws SQLException, InterruptedException {
         Connection connection = connectionQueue.take();
         PreparedStatement statement = connection.prepareStatement("update room set end = ? where id = ?");
