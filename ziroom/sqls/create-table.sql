@@ -5,7 +5,7 @@ use ziroom;
 
 create table location(
 	`id` int unsigned not null auto_increment,
-	`houseId` int,
+	`houseId` varchar(16),
 	`line` int,
 	`stationName` varchar(32),
 	`distance` int,
@@ -14,7 +14,7 @@ create table location(
 
 create table house(
 	`id` int unsigned not null auto_increment,
-	`houseId` int,
+	`houseId` varchar(16),
 	`detailName` varchar(256),
 	`notDetailName` varchar(256),
 	`layout` varchar(16),
@@ -28,7 +28,7 @@ create table house(
 
 create table price(
 	`id` int unsigned not null auto_increment,
-	`roomId` int,
+	`roomId` varchar(16),
 	`rentPerMonth` int,
 	`deposit` int,
 	`servicePerYear` int,
@@ -38,7 +38,7 @@ create table price(
 
 create table room(
 	`id` int unsigned not null auto_increment,
-	`houseId` int,
+	`houseId` varchar(16),
 	`roomId` varchar(16),
 	`number` varchar(16),
 	`area` int,
@@ -61,7 +61,7 @@ create table room(
 
 create table history_house(
 	`id` int unsigned not null auto_increment,
-	`houseId` int,
+	`houseId` varchar(16),
 	`detailName` varchar(256),
 	`notDetailName` varchar(256),
 	`layout` varchar(16),
@@ -75,7 +75,7 @@ create table history_house(
 create table history_room(
 	`id` int unsigned not null auto_increment,
 	`historyHouseId` int unsigned not null,
-	`houseId` int,
+	`houseId` varchar(16),
 	`roomId` varchar(16),
 	`number` varchar(16),
 	`area` int,
@@ -94,7 +94,7 @@ create table history_room(
 create table history_location(
 	`id` int unsigned not null auto_increment,
 	`historyHouseId` int unsigned not null,
-	`houseId` int,
+	`houseId` varchar(16),
 	`line` int,
 	`stationName` varchar(32),
 	`distance` int,
@@ -105,7 +105,7 @@ create table history_location(
 create table history_price(
 	`id` int unsigned not null auto_increment,
 	`historyRoomId` int unsigned not null,
-	`roomId` int,
+	`roomId` varchar(16),
 	`rentPerMonth` int,
 	`deposit` int,
 	`servicePerYear` int,
