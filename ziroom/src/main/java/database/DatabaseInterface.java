@@ -6,4 +6,6 @@ import java.util.Map;
 public interface DatabaseInterface {
 
     Map<String, RoomEntity> getAllRooms() throws InterruptedException, SQLException;
+
+    void updateRoomEndTime(RoomEntity roomEntity) throws InterruptedException, SQLException;
 }

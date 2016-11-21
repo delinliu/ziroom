@@ -2,9 +2,11 @@ package database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -48,7 +50,18 @@ public class Database implements DatabaseInterface {
     }
 
     @Override
-    public Map<String, RoomEntity> getAllRooms() throws InterruptedException, SQLException {
+    public void updateRoomEndTime(RoomEntity roomEntity) throws SQLException, InterruptedException {
+        Connection connection = connectionQueue.take();
+        PreparedStatement statement = connection.prepareStatement("update room set end = ? where id = ?");
+        statement.setTimestamp(1, new Timestamp(roomEntity.getNewEnd().getTime()));
+        statement.setInt(2, roomEntity.getRoomIdLocal());
+        statement.executeUpdate();
+        statement.close();
+        connectionQueue.put(connection);
+    }
+
+    @Override
+    public Map<String, RoomEntity> getAllRooms() throws SQLException, InterruptedException {
         Connection connection = connectionQueue.take();
         Statement statement = connection.createStatement();
         Map<String, List<Location>> locationMap = loadAllLocations(statement);
