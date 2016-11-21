@@ -12,6 +12,10 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
+import entity.House;
+import entity.Room;
+import entity.State;
+
 public class DatabaseTest {
 
     private String roomId = "1000";
@@ -53,17 +57,51 @@ public class DatabaseTest {
         connection.close();
     }
 
+    private String url = "jdbc:mysql://127.0.0.1/ziroom_test";
+    private String user = "root";
+    private String password = "123456";
+
     @Test
-    public void testGetRoomAndUpdateTime()
-            throws ClassNotFoundException, InterruptedException, SQLException, NoSuchMethodException, SecurityException,
-            IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        Database database = new Database(1, "jdbc:mysql://127.0.0.1/ziroom_test", "root", "123456");
+    public void testGetRoom() throws ClassNotFoundException, InterruptedException, SQLException, NoSuchMethodException,
+            SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Database database = new Database(1, url, user, password);
         initDatabase(database);
         Map<String, RoomEntity> roomMap = database.getAllRooms();
-        Assert.assertTrue(!roomMap.isEmpty());
-        System.out.println(roomMap);
+        Assert.assertEquals(2, roomMap.size());
         RoomEntity roomEntity = roomMap.get(roomId);
+        Room room = roomEntity.getRoom();
         Assert.assertNotNull(roomEntity);
+        Assert.assertEquals(10000, roomEntity.getRoomIdLocal());
+        Assert.assertEquals("1", room.getHouse().getHouseId());
+        Assert.assertEquals("1000", room.getRoomId());
+        Assert.assertEquals("number", room.getNumber());
+        Assert.assertEquals(10, room.getArea());
+        Assert.assertEquals("南", room.getOrientation());
+        Assert.assertEquals("木棉", room.getStyle().getStyle());
+        Assert.assertEquals(4, room.getStyle().getVersion());
+        Assert.assertEquals(true, room.isSeparateBalcony());
+        Assert.assertEquals(false, room.isSeparateBathroom());
+        Assert.assertEquals(State.Available, room.getState());
+        Assert.assertEquals(4, room.getPrices().size());
+        House house = room.getHouse();
+        Assert.assertEquals("detail name", house.getDetailName());
+        Assert.assertEquals("not detail name", house.getNotDetailName());
+        Assert.assertEquals("layout", house.getLayout());
+        Assert.assertEquals(3, house.getBedroom());
+        Assert.assertEquals(1, house.getLivingroom());
+        Assert.assertEquals(5, house.getCurrentFloor());
+        Assert.assertEquals(10, house.getTotalFloor());
+        Assert.assertEquals(3, house.getLocations().size());
+    }
+
+    @Test
+    public void testUpdateEndTime()
+            throws ClassNotFoundException, InterruptedException, SQLException, NoSuchMethodException, SecurityException,
+            IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Database database = new Database(1, url, user, password);
+        initDatabase(database);
+        Map<String, RoomEntity> roomMap = database.getAllRooms();
+        RoomEntity roomEntity = roomMap.get(roomId);
         Timestamp date = new Timestamp(new Date().getTime());
         roomEntity.setNewEnd(date);
         database.updateRoomEndTime(roomEntity);
@@ -72,15 +110,15 @@ public class DatabaseTest {
     }
 
     @Test
-    public void testMove() throws SQLException, InterruptedException, ClassNotFoundException, NoSuchMethodException,
-            SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        Database database = new Database(1, "jdbc:mysql://127.0.0.1/ziroom_test", "root", "123456");
+    public void testMoveWithNoHouseChange()
+            throws SQLException, InterruptedException, ClassNotFoundException, NoSuchMethodException, SecurityException,
+            IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Database database = new Database(1, url, user, password);
         initDatabase(database);
         Map<String, RoomEntity> roomMap = database.getAllRooms();
-        Assert.assertTrue(!roomMap.isEmpty());
         RoomEntity roomEntity = roomMap.get(roomId);
         Assert.assertNotNull(roomEntity);
-        database.moveRoomToHistory(roomEntity);
+        database.moveRoomToHistoryWithNoHouseChange(roomEntity);
         roomMap = database.getAllRooms();
         Assert.assertNull(roomMap.get(roomId));
     }

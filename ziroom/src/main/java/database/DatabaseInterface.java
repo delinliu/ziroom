@@ -9,5 +9,5 @@ public interface DatabaseInterface {
 
     void updateRoomEndTime(RoomEntity roomEntity) throws InterruptedException, SQLException;
 
-    void moveRoomToHistory(RoomEntity roomEntity) throws InterruptedException, SQLException;
+    void moveRoomToHistoryWithNoHouseChange(RoomEntity roomEntity) throws InterruptedException, SQLException;
 }

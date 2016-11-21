@@ -50,7 +50,7 @@ public class Database implements DatabaseInterface {
     }
 
     @Override
-    public void moveRoomToHistory(RoomEntity roomEntity) throws InterruptedException, SQLException {
+    public void moveRoomToHistoryWithNoHouseChange(RoomEntity roomEntity) throws InterruptedException, SQLException {
         int roomIdLocal = roomEntity.getRoomIdLocal();
         int houseIdLocal = roomEntity.getHouseIdLocal();
         String roomId = roomEntity.getRoom().getRoomId();
@@ -63,26 +63,70 @@ public class Database implements DatabaseInterface {
         copyLocationToHistory(houseIdLocal, houseId, connection);
         deleteLocation(houseId, connection);
         deletePrice(roomId, connection);
-        deleteRoom(roomId, connection);
-        deleteHouse(houseId, connection);
+        deleteRoom(roomIdLocal, connection);
+        deleteHouse(houseIdLocal, connection);
+        insertHouse(roomEntity, houseId, connection);
+        insertLocations(roomEntity, houseId, connection);
         connection.commit();
         connection.setAutoCommit(true);
         connectionQueue.put(connection);
     }
 
-    private void deleteHouse(String houseId, Connection connection) throws SQLException {
-        PreparedStatement statement;
-        String deleteHouseSql = "delete from house where houseId=?";
-        statement = connection.prepareStatement(deleteHouseSql);
+    private void insertPrices(RoomEntity roomEntity, String roomId, Connection connection) throws SQLException {
+        List<Price> prices = roomEntity.getRoom().getPrices();
+        for (Price price : prices) {
+            PreparedStatement statement = connection.prepareStatement(
+                    "insert into `price`(roomId, rentPerMonth, deposit, servicePerYear, desc) values(?, ?, ?, ?, ?)");
+            statement.setString(1, roomId);
+            statement.setInt(2, price.getRentPerMonth());
+            statement.setInt(3, price.getDeposit());
+            statement.setInt(4, price.getServicePerYear());
+            statement.setString(5, price.getDesc());
+            statement.executeUpdate();
+        }
+    }
+
+    private void insertLocations(RoomEntity roomEntity, String houseId, Connection connection) throws SQLException {
+        List<Location> locations = roomEntity.getRoom().getHouse().getLocations();
+        for (Location location : locations) {
+            PreparedStatement statement = connection.prepareStatement(
+                    "insert into `location`(houseId, line, stationName, distance) values(?, ?, ?, ?)");
+            statement.setString(1, houseId);
+            statement.setInt(2, location.getLine());
+            statement.setString(3, location.getStationName());
+            statement.setInt(4, location.getDistance());
+            statement.executeUpdate();
+        }
+    }
+
+    private void insertHouse(RoomEntity roomEntity, String houseId, Connection connection) throws SQLException {
+        House house = roomEntity.getRoom().getHouse();
+        PreparedStatement statement = connection.prepareStatement(
+                "insert into `house`(houseId, detailName, notDetailName, layout, bedroom, livingroom, currentFloor, totalFloor) values(?, ?, ?, ?, ?, ?, ?, ?)");
         statement.setString(1, houseId);
+        statement.setString(2, house.getDetailName());
+        statement.setString(3, house.getNotDetailName());
+        statement.setString(4, house.getLayout());
+        statement.setInt(5, house.getBedroom());
+        statement.setInt(6, house.getLivingroom());
+        statement.setInt(7, house.getCurrentFloor());
+        statement.setInt(8, house.getTotalFloor());
         statement.executeUpdate();
     }
 
-    private void deleteRoom(String roomId, Connection connection) throws SQLException {
+    private void deleteHouse(int houseIdLocal, Connection connection) throws SQLException {
         PreparedStatement statement;
-        String deleteRoomSql = "delete from room where roomId=?";
+        String deleteHouseSql = "delete from house where id=?";
+        statement = connection.prepareStatement(deleteHouseSql);
+        statement.setInt(1, houseIdLocal);
+        statement.executeUpdate();
+    }
+
+    private void deleteRoom(int roomIdLocal, Connection connection) throws SQLException {
+        PreparedStatement statement;
+        String deleteRoomSql = "delete from room where id=?";
         statement = connection.prepareStatement(deleteRoomSql);
-        statement.setString(1, roomId);
+        statement.setInt(1, roomIdLocal);
         statement.executeUpdate();
     }
 
@@ -242,7 +286,7 @@ public class Database implements DatabaseInterface {
             location.setDistance(distance);
             location.setLine(line);
             location.setStationName(stationName);
-            if (!locationMap.containsKey("houseId")) {
+            if (!locationMap.containsKey(houseId)) {
                 locationMap.put(houseId, new ArrayList<>());
             }
             List<Location> locations = locationMap.get(houseId);
