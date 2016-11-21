@@ -10,7 +10,8 @@ public interface DatabaseInterface {
      * Get all the rooms from database (without history items).
      * The related house and prices and locations will be put into every room and return.
      */
-    Map<String, RoomEntity> getAllRooms() throws InterruptedException, SQLException;
+    void getAllRooms(Map<String, RoomEntity> roomMap, Map<String, HouseEntity> houseMap)
+            throws InterruptedException, SQLException;
 
     /**
      * Just update the room's end time. 

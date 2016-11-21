@@ -278,7 +278,8 @@ public class Database implements DatabaseInterface {
     }
 
     @Override
-    public Map<String, RoomEntity> getAllRooms() throws SQLException, InterruptedException {
+    public void getAllRooms(Map<String, RoomEntity> roomMapParam, Map<String, HouseEntity> houseMapParam)
+            throws SQLException, InterruptedException {
         Connection connection = connectionQueue.take();
         try {
             Statement statement = connection.createStatement();
@@ -287,7 +288,8 @@ public class Database implements DatabaseInterface {
             Map<String, HouseEntity> houseMap = loadAllHouses(statement, locationMap);
             Map<String, RoomEntity> roomMap = loadAllRooms(statement, locationMap, priceMap, houseMap);
             statement.close();
-            return roomMap;
+            roomMapParam.putAll(roomMap);
+            houseMapParam.putAll(houseMap);
         } catch (Exception e) {
             throw e;
         } finally {

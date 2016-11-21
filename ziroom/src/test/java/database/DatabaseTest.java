@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,7 +69,9 @@ public class DatabaseTest {
             SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Database database = new Database(1, url, user, password);
         initDatabase(database);
-        Map<String, RoomEntity> roomMap = database.getAllRooms();
+        Map<String, RoomEntity> roomMap = new HashMap<>();
+        Map<String, HouseEntity> houseMap = new HashMap<>();
+        database.getAllRooms(roomMap, houseMap);
         Assert.assertEquals(2, roomMap.size());
         RoomEntity roomEntity = roomMap.get(roomId);
         Room room = roomEntity.getRoom();
@@ -102,12 +105,16 @@ public class DatabaseTest {
             IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Database database = new Database(1, url, user, password);
         initDatabase(database);
-        Map<String, RoomEntity> roomMap = database.getAllRooms();
+        Map<String, RoomEntity> roomMap = new HashMap<>();
+        Map<String, HouseEntity> houseMap = new HashMap<>();
+        database.getAllRooms(roomMap, houseMap);
         RoomEntity roomEntity = roomMap.get(roomId);
         Timestamp date = new Timestamp(new Date().getTime());
         roomEntity.setNewEnd(date);
         database.updateRoomEndTime(roomEntity);
-        roomMap = database.getAllRooms();
+        roomMap.clear();
+        houseMap.clear();
+        database.getAllRooms(roomMap, houseMap);
         Assert.assertTrue(Math.abs(date.getTime() - roomMap.get(roomId).getEnd().getTime()) <= 1000);
     }
 
@@ -117,7 +124,9 @@ public class DatabaseTest {
             IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Database database = new Database(1, url, user, password);
         initDatabase(database);
-        Map<String, RoomEntity> roomMap = database.getAllRooms();
+        Map<String, RoomEntity> roomMap = new HashMap<>();
+        Map<String, HouseEntity> houseMap = new HashMap<>();
+        database.getAllRooms(roomMap, houseMap);
         RoomEntity roomEntity = roomMap.get(roomId);
         Assert.assertNotNull(roomEntity);
         Timestamp date = new Timestamp(new Date().getTime());
@@ -170,7 +179,9 @@ public class DatabaseTest {
         List<RoomEntity> roomList = Arrays.asList(new RoomEntity[] { roomEntity, theOther });
         database.moveRoomToHistoryWithHouseChange(roomList);
 
-        roomMap = database.getAllRooms();
+        roomMap.clear();
+        houseMap.clear();
+        database.getAllRooms(roomMap, houseMap);
         roomEntity = roomMap.get(roomId);
         room = roomEntity.getRoom();
         Assert.assertEquals(newArea, room.getArea());
@@ -203,7 +214,9 @@ public class DatabaseTest {
             IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Database database = new Database(1, url, user, password);
         initDatabase(database);
-        Map<String, RoomEntity> roomMap = database.getAllRooms();
+        Map<String, RoomEntity> roomMap = new HashMap<>();
+        Map<String, HouseEntity> houseMap = new HashMap<>();
+        database.getAllRooms(roomMap, houseMap);
         RoomEntity roomEntity = roomMap.get(roomId);
         Assert.assertNotNull(roomEntity);
         Timestamp date = new Timestamp(new Date().getTime());
@@ -229,7 +242,9 @@ public class DatabaseTest {
         roomEntity.setBegin(date);
         roomEntity.setEnd(date);
         database.moveRoomToHistoryWithNoHouseChange(roomEntity);
-        roomMap = database.getAllRooms();
+        roomMap.clear();
+        houseMap.clear();
+        database.getAllRooms(roomMap, houseMap);
         roomEntity = roomMap.get(roomId);
         room = roomEntity.getRoom();
         Assert.assertEquals(newArea, room.getArea());
