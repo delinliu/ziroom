@@ -44,14 +44,17 @@ public class RoomListCrawler {
             executor.execute(new CrawlerHelper());
         }
         isRunning = true;
+        System.out.println("Room list crawler started. [threadAmount=" + threadAmount + ", sleepSecond=" + sleepSecond
+                + ", resetSecond=" + resetSecond + "]");
     }
 
     public void stopCrawler() {
         if (!isRunning) {
             return;
         }
-        executor.shutdown();
+        executor.shutdownNow();
         isRunning = false;
+        System.out.println("Room list crawler stoped.");
     }
 
     public String getRoomListUrl() {
@@ -76,25 +79,33 @@ public class RoomListCrawler {
                     String content = httpFetcher.fetchContent(url);
                     Set<String> ids = parser.parseRoomList(content);
                     idSet.addAll(ids);
+                    System.out.println("Crawled page " + page + ".");
                 } catch (HttpFetcherException e) {
                     e.printStackTrace();
                 } catch (ParserException e) {
-                    e.printStackTrace();
                     if (RoomListParser.errRoomListNoMore.equals(e.getMessage())) {
-                        sleep(resetSecond);
+                        try {
+                            Thread.sleep(resetSecond * 1000);
+                        } catch (InterruptedException ee) {
+                            // e.printStackTrace();
+                            break;
+                        }
                         currentPage.set(1);
+                        System.out.println("Page " + page + " not found, go to first page.");
+                    } else {
+                        System.err.println("ParserException, url=" + url);
+                        e.printStackTrace();
                     }
                 }
-                sleep(sleepSecond);
-            }
-        }
 
-        private void sleep(int second) {
-            try {
-                Thread.sleep(second * 1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                try {
+                    Thread.sleep(sleepSecond * 1000);
+                } catch (InterruptedException e) {
+                    // e.printStackTrace();
+                    break;
+                }
             }
+            System.out.println("Room list crawler quit.");
         }
     }
 }

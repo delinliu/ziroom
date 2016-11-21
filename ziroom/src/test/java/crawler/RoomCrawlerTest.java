@@ -16,8 +16,8 @@ public class RoomCrawlerTest {
     public void test() throws InterruptedException {
 
         ConcurrentSetInterface set = new ConcurrentSet();
-        set.addAll(Arrays.asList(
-                new String[] { "60280613", "60298387", "305928", "60196598", "60312658", "60314279", "60298388" }));
+        set.addAll(Arrays.asList(new String[] { "60126378", "60280613", "60298387", "305928", "60196598", "60312658",
+                "60314279", "60298388" }));
         BlockingQueue<Room> roomQueue = new ArrayBlockingQueue<>(1000);
         RoomCrawler crawler = new RoomCrawler(set, roomQueue);
         crawler.startCrawler(1, 1);
@@ -26,8 +26,5 @@ public class RoomCrawlerTest {
         System.out.println("Wait " + second + "s for room crawler test.");
         Thread.sleep(second * 1000);
         crawler.stopCrawler();
-        while (!roomQueue.isEmpty()) {
-            System.out.println(roomQueue.take());
-        }
     }
 }

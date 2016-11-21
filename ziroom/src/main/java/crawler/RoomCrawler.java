@@ -42,14 +42,17 @@ public class RoomCrawler {
             executor.execute(new CrawlerHelper());
         }
         isRunning = true;
+        System.out
+                .println("Room crawler started. [threadAmount=" + threadAmount + ", sleepSecond=" + sleepSecond + "]");
     }
 
     public void stopCrawler() {
         if (!isRunning) {
             return;
         }
-        executor.shutdown();
+        executor.shutdownNow();
         isRunning = false;
+        System.out.println("Room crawler stoped.");
     }
 
     private class CrawlerHelper extends Thread {
@@ -62,6 +65,7 @@ public class RoomCrawler {
                     String content = httpFetcher.fetchContent(roomPage);
                     Room room = parser.parseRoom(content);
                     roomQueue.put(room);
+                    System.out.println("Crawled room " + id + ".");
                 } catch (NoSuchElementException e) {
                     e.printStackTrace();
                 } catch (HttpFetcherException e) {
@@ -69,18 +73,17 @@ public class RoomCrawler {
                 } catch (ParserException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
+                    break;
                 }
-                sleep(sleepSecond);
+                try {
+                    Thread.sleep(sleepSecond * 1000);
+                } catch (InterruptedException e) {
+                    // e.printStackrace();
+                    break;
+                }
             }
-        }
-
-        private void sleep(int second) {
-            try {
-                Thread.sleep(second * 1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            System.out.println("Room crawler quit.");
         }
     }
 }

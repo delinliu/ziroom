@@ -14,7 +14,7 @@ public class RoomListCrawlerTest {
     public void test() throws InterruptedException {
         ConcurrentSetInterface set = new ConcurrentSet();
         RoomListCrawler crawler = new RoomListCrawler(set);
-        crawler.startCrawler(2, 1, 3600, roomListUrl);
+        crawler.startCrawler(3, 1, 3, roomListUrl);
         int second = 15;
         System.out.println("Wait " + second + "s for room list crawler test.");
         Thread.sleep(second * 1000);

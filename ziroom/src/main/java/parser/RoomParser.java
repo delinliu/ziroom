@@ -79,12 +79,12 @@ public class RoomParser implements RoomParserInterface {
         Room room = new Room();
         room.setHouse(house);
 
+        parseRoomAndHouseId(house, room, document);
         parseRoomNames(house, room, document);
         parseRoomDetail(house, room, document);
         parseRoomPrices(house, room, document);
         parseRoomTags(house, room, document);
         parseRoomState(house, room, document);
-        parseRoomAndHouseId(house, room, document);
 
         return room;
     }
@@ -450,7 +450,7 @@ public class RoomParser implements RoomParserInterface {
         }
 
         List<Location> locations = new ArrayList<>();
-        Pattern pattern = Pattern.compile("距([0-9]+)号线([^0-9]+)([0-9]+)米");
+        Pattern pattern = Pattern.compile("距 *([0-9]+) *号线 *([^0-9]+)([0-9]+) *米");
         for (String locationText : lineTexts) {
             locationText = locationText.trim();
             Matcher matcher = pattern.matcher(locationText);
