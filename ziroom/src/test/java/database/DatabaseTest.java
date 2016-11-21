@@ -6,7 +6,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -110,6 +112,92 @@ public class DatabaseTest {
     }
 
     @Test
+    public void testMoveWithHouseChange()
+            throws SQLException, InterruptedException, ClassNotFoundException, NoSuchMethodException, SecurityException,
+            IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Database database = new Database(1, url, user, password);
+        initDatabase(database);
+        Map<String, RoomEntity> roomMap = database.getAllRooms();
+        RoomEntity roomEntity = roomMap.get(roomId);
+        Assert.assertNotNull(roomEntity);
+        Timestamp date = new Timestamp(new Date().getTime());
+        Room room = roomEntity.getRoom();
+        int newArea = 100;
+        String newNumber = "new number";
+        String newOrientation = "北";
+        boolean newSeparateBalcony = false;
+        boolean newSeparateBathroom = true;
+        State newState = State.Unavailable;
+        int newRentPerMonth = 50;
+        String newStyle = "米苏";
+        int newStyleVersion = 5;
+        room.setArea(newArea);
+        room.setNumber(newNumber);
+        room.setOrientation(newOrientation);
+        room.setSeparateBalcony(newSeparateBalcony);
+        room.setSeparateBathroom(newSeparateBathroom);
+        room.setState(newState);
+        room.getPrices().get(0).setRentPerMonth(newRentPerMonth);
+        room.getStyle().setStyle(newStyle);
+        room.getStyle().setVersion(newStyleVersion);
+        roomEntity.setBegin(date);
+        roomEntity.setEnd(date);
+
+        int newBedroom = 10;
+        int newCurrentFloor = 100;
+        String newDetailName = "dddtailname";
+        String newLayout = "llllayout";
+        int newLivingroom = 20;
+        String newNotDetailName = "nnnnnot detailname";
+        int newTotalFloor = 1000;
+        int newDistance = 10000;
+        int newLine = 5;
+        String newStationName = "剑川路";
+        House house = room.getHouse();
+        house.setBedroom(newBedroom);
+        house.setCurrentFloor(newCurrentFloor);
+        house.setDetailName(newDetailName);
+        house.setLayout(newLayout);
+        house.setLivingroom(newLivingroom);
+        house.setNotDetailName(newNotDetailName);
+        house.setTotalFloor(newTotalFloor);
+        house.getLocations().get(0).setDistance(newDistance);
+        house.getLocations().get(0).setLine(newLine);
+        house.getLocations().get(0).setStationName(newStationName);
+
+        String theOtherRoomId = "2000";
+        RoomEntity theOther = roomMap.get(theOtherRoomId);
+        List<RoomEntity> roomList = Arrays.asList(new RoomEntity[] { roomEntity, theOther });
+        database.moveRoomToHistoryWithHouseChange(roomList);
+
+        roomMap = database.getAllRooms();
+        roomEntity = roomMap.get(roomId);
+        room = roomEntity.getRoom();
+        Assert.assertEquals(newArea, room.getArea());
+        Assert.assertEquals(newNumber, room.getNumber());
+        Assert.assertEquals(newOrientation, room.getOrientation());
+        Assert.assertEquals(newSeparateBalcony, room.isSeparateBalcony());
+        Assert.assertEquals(newSeparateBathroom, room.isSeparateBathroom());
+        Assert.assertEquals(newState, room.getState());
+        Assert.assertEquals(newRentPerMonth, room.getPrices().get(0).getRentPerMonth());
+        Assert.assertEquals(newStyle, room.getStyle().getStyle());
+        Assert.assertEquals(newStyleVersion, room.getStyle().getVersion());
+        theOther = roomMap.get(theOtherRoomId);
+        Assert.assertEquals(theOther.getRoom().getHouse(), roomEntity.getRoom().getHouse());
+        house = roomEntity.getRoom().getHouse();
+        Assert.assertEquals(newBedroom, house.getBedroom());
+        Assert.assertEquals(newCurrentFloor, house.getCurrentFloor());
+        Assert.assertEquals(newDetailName, house.getDetailName());
+        Assert.assertEquals(newLayout, house.getLayout());
+        Assert.assertEquals(newLivingroom, house.getLivingroom());
+        Assert.assertEquals(newNotDetailName, house.getNotDetailName());
+        Assert.assertEquals(newTotalFloor, house.getTotalFloor());
+        Assert.assertEquals(newDistance, house.getLocations().get(0).getDistance());
+        Assert.assertEquals(newLine, house.getLocations().get(0).getLine());
+        Assert.assertEquals(newStationName, house.getLocations().get(0).getStationName());
+    }
+
+    @Test
     public void testMoveWithNoHouseChange()
             throws SQLException, InterruptedException, ClassNotFoundException, NoSuchMethodException, SecurityException,
             IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -153,6 +241,6 @@ public class DatabaseTest {
         Assert.assertEquals(newRentPerMonth, room.getPrices().get(0).getRentPerMonth());
         Assert.assertEquals(newStyle, room.getStyle().getStyle());
         Assert.assertEquals(newStyleVersion, room.getStyle().getVersion());
-        
+
     }
 }

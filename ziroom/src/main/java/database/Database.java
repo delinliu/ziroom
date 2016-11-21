@@ -50,28 +50,85 @@ public class Database implements DatabaseInterface {
     }
 
     @Override
+    public void moveRoomToHistoryWithHouseChange(List<RoomEntity> rooms) throws InterruptedException, SQLException {
+        if (rooms.isEmpty()) {
+            return;
+        }
+        int houseIdLocal = rooms.get(0).getHouseIdLocal();
+        House house = rooms.get(0).getRoom().getHouse();
+        String houseId = rooms.get(0).getRoom().getHouse().getHouseId();
+        for (RoomEntity room : rooms) {
+            if (room.getHouseIdLocal() != houseIdLocal || room.getRoom().getHouse() != house) {
+                throw new IllegalArgumentException("Those rooms do NOT share one house.");
+            }
+        }
+
+        Connection connection = connectionQueue.take();
+        try {
+            connection.setAutoCommit(false);
+            copyHouseToHistory(houseId, connection);
+            copyLocationToHistory(houseIdLocal, houseId, connection);
+            for (RoomEntity roomEntity : rooms) {
+                copyRoomToHistory(houseIdLocal, roomEntity.getRoom().getRoomId(), connection);
+                copyPriceToHistory(roomEntity.getRoomIdLocal(), roomEntity.getRoom().getRoomId(), connection);
+            }
+            for (RoomEntity roomEntity : rooms) {
+                deletePrice(roomEntity.getRoom().getRoomId(), connection);
+                deleteRoom(roomEntity.getRoomIdLocal(), connection);
+            }
+            deleteLocation(houseId, connection);
+            deleteHouse(houseIdLocal, connection);
+            insertHouse(rooms.get(0), houseId, connection);
+            insertLocations(rooms.get(0), houseId, connection);
+            for (RoomEntity roomEntity : rooms) {
+                insertRoom(roomEntity, roomEntity.getRoom().getRoomId(), houseId, connection);
+                insertPrices(roomEntity, roomEntity.getRoom().getRoomId(), connection);
+            }
+            connection.commit();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            connectionQueue.put(connection);
+        }
+    }
+
+    @Override
     public void moveRoomToHistoryWithNoHouseChange(RoomEntity roomEntity) throws InterruptedException, SQLException {
         int roomIdLocal = roomEntity.getRoomIdLocal();
         int houseIdLocal = roomEntity.getHouseIdLocal();
         String roomId = roomEntity.getRoom().getRoomId();
         String houseId = roomEntity.getRoom().getHouse().getHouseId();
         Connection connection = connectionQueue.take();
-        connection.setAutoCommit(false);
-        copyHouseToHistory(houseId, connection);
-        copyRoomToHistory(houseIdLocal, roomId, connection);
-        copyPriceToHistory(roomIdLocal, roomId, connection);
-        copyLocationToHistory(houseIdLocal, houseId, connection);
-        deleteLocation(houseId, connection);
-        deletePrice(roomId, connection);
-        deleteRoom(roomIdLocal, connection);
-        deleteHouse(houseIdLocal, connection);
-        insertHouse(roomEntity, houseId, connection);
-        insertLocations(roomEntity, houseId, connection);
-        insertRoom(roomEntity, roomId, houseId, connection);
-        insertPrices(roomEntity, roomId, connection);
-        connection.commit();
-        connection.setAutoCommit(true);
-        connectionQueue.put(connection);
+        try {
+            connection.setAutoCommit(false);
+            copyHouseToHistory(houseId, connection);
+            copyRoomToHistory(houseIdLocal, roomId, connection);
+            copyPriceToHistory(roomIdLocal, roomId, connection);
+            copyLocationToHistory(houseIdLocal, houseId, connection);
+            deleteLocation(houseId, connection);
+            deletePrice(roomId, connection);
+            deleteRoom(roomIdLocal, connection);
+            deleteHouse(houseIdLocal, connection);
+            insertHouse(roomEntity, houseId, connection);
+            insertLocations(roomEntity, houseId, connection);
+            insertRoom(roomEntity, roomId, houseId, connection);
+            insertPrices(roomEntity, roomId, connection);
+            connection.commit();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            connectionQueue.put(connection);
+        }
     }
 
     private void insertRoom(RoomEntity roomEntity, String roomId, String houseId, Connection connection)
@@ -207,34 +264,44 @@ public class Database implements DatabaseInterface {
     @Override
     public void updateRoomEndTime(RoomEntity roomEntity) throws SQLException, InterruptedException {
         Connection connection = connectionQueue.take();
-        PreparedStatement statement = connection.prepareStatement("update room set end = ? where id = ?");
-        statement.setTimestamp(1, new Timestamp(roomEntity.getNewEnd().getTime()));
-        statement.setInt(2, roomEntity.getRoomIdLocal());
-        statement.executeUpdate();
-        statement.close();
-        connectionQueue.put(connection);
+        try {
+            PreparedStatement statement = connection.prepareStatement("update room set end = ? where id = ?");
+            statement.setTimestamp(1, new Timestamp(roomEntity.getNewEnd().getTime()));
+            statement.setInt(2, roomEntity.getRoomIdLocal());
+            statement.executeUpdate();
+            statement.close();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            connectionQueue.put(connection);
+        }
     }
 
     @Override
     public Map<String, RoomEntity> getAllRooms() throws SQLException, InterruptedException {
         Connection connection = connectionQueue.take();
-        Statement statement = connection.createStatement();
-        Map<String, List<Location>> locationMap = loadAllLocations(statement);
-        Map<String, List<Price>> priceMap = loadAllPrices(statement);
-        Map<String, RoomEntity> roomMap = loadAllRooms(statement, locationMap, priceMap);
-        statement.close();
-        connectionQueue.put(connection);
-        return roomMap;
+        try {
+            Statement statement = connection.createStatement();
+            Map<String, List<Location>> locationMap = loadAllLocations(statement);
+            Map<String, List<Price>> priceMap = loadAllPrices(statement);
+            Map<String, HouseEntity> houseMap = loadAllHouses(statement, locationMap);
+            Map<String, RoomEntity> roomMap = loadAllRooms(statement, locationMap, priceMap, houseMap);
+            statement.close();
+            return roomMap;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            connectionQueue.put(connection);
+        }
     }
 
-    private Map<String, RoomEntity> loadAllRooms(Statement statement, Map<String, List<Location>> locationMap,
-            Map<String, List<Price>> priceMap) throws SQLException {
+    private Map<String, HouseEntity> loadAllHouses(Statement statement, Map<String, List<Location>> locationMap)
+            throws SQLException {
         ResultSet resultSet;
-        resultSet = statement.executeQuery(
-                "select *, room.id as roomIdLocal, house.id as houseIdLocal from room left join house on room.houseId = house.houseId");
-        Map<String, RoomEntity> roomMap = new HashMap<>();
+        resultSet = statement.executeQuery("select * from house");
+        Map<String, HouseEntity> houseMap = new HashMap<>();
         while (resultSet.next()) {
-            int houseIdLocal = resultSet.getInt("houseIdLocal");
+            int houseIdLocal = resultSet.getInt("id");
             String houseId = resultSet.getString("houseId");
             String detailName = resultSet.getString("detailName");
             String notDetailName = resultSet.getString("notDetailName");
@@ -253,8 +320,23 @@ public class Database implements DatabaseInterface {
             house.setCurrentFloor(currentFloor);
             house.setTotalFloor(totalFloor);
             house.setLocations(locationMap.get(houseId));
+            HouseEntity houseEntity = new HouseEntity();
+            houseEntity.setHouse(house);
+            houseEntity.setHouseIdLocal(houseIdLocal);
+            houseMap.put(houseId, houseEntity);
+        }
+        return houseMap;
+    }
 
-            int roomIdLocal = resultSet.getInt("roomIdLocal");
+    private Map<String, RoomEntity> loadAllRooms(Statement statement, Map<String, List<Location>> locationMap,
+            Map<String, List<Price>> priceMap, Map<String, HouseEntity> houseMap) throws SQLException {
+        ResultSet resultSet;
+        resultSet = statement.executeQuery("select * from room");
+        Map<String, RoomEntity> roomMap = new HashMap<>();
+        while (resultSet.next()) {
+
+            int roomIdLocal = resultSet.getInt("id");
+            String houseId = resultSet.getString("houseId");
             String roomId = resultSet.getString("roomId");
             String number = resultSet.getString("number");
             int area = resultSet.getInt("area");
@@ -267,7 +349,7 @@ public class Database implements DatabaseInterface {
             Date begin = resultSet.getTimestamp("begin");
             Date end = resultSet.getTimestamp("end");
             Room room = new Room();
-            room.setHouse(house);
+            room.setHouse(houseMap.get(houseId).getHouse());
             room.setRoomId(roomId);
             room.setNumber(number);
             room.setArea(area);
@@ -286,10 +368,11 @@ public class Database implements DatabaseInterface {
             room.setStyle(st);
 
             RoomEntity roomEntity = new RoomEntity();
+            roomEntity.setHouseEntity(houseMap.get(houseId));
             roomEntity.setBegin(begin);
             roomEntity.setEnd(end);
             roomEntity.setRoomIdLocal(roomIdLocal);
-            roomEntity.setHouseIdLocal(houseIdLocal);
+            roomEntity.setHouseIdLocal(houseMap.get(houseId).getHouseIdLocal());
             roomEntity.setRoom(room);
             roomMap.put(roomId, roomEntity);
         }

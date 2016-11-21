@@ -7,6 +7,7 @@ import entity.Room;
 public class RoomEntity {
 
     private Room room;
+    private HouseEntity houseEntity;
     private int roomIdLocal;
     private int houseIdLocal;
     private Date begin;
@@ -25,6 +26,14 @@ public class RoomEntity {
         this.room = room;
     }
 
+
+    public HouseEntity getHouseEntity() {
+        return houseEntity;
+    }
+
+    public void setHouseEntity(HouseEntity houseEntity) {
+        this.houseEntity = houseEntity;
+    }
 
     public int getRoomIdLocal() {
         return roomIdLocal;
