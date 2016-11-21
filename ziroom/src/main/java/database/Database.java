@@ -67,16 +67,39 @@ public class Database implements DatabaseInterface {
         deleteHouse(houseIdLocal, connection);
         insertHouse(roomEntity, houseId, connection);
         insertLocations(roomEntity, houseId, connection);
+        insertRoom(roomEntity, roomId, houseId, connection);
+        insertPrices(roomEntity, roomId, connection);
         connection.commit();
         connection.setAutoCommit(true);
         connectionQueue.put(connection);
+    }
+
+    private void insertRoom(RoomEntity roomEntity, String roomId, String houseId, Connection connection)
+            throws SQLException {
+        Room room = roomEntity.getRoom();
+        PreparedStatement statement = connection.prepareStatement(
+                "insert into `room`(`houseId`, `roomId`, `number`, `area`, `orientation`, `style`, `styleVersion`, `separateBalcony`, `separateBathroom`, `state`, `begin`, `end`)"
+                        + " values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        statement.setString(1, houseId);
+        statement.setString(2, roomId);
+        statement.setString(3, room.getNumber());
+        statement.setInt(4, room.getArea());
+        statement.setString(5, room.getOrientation());
+        statement.setString(6, room.getStyle().getStyle());
+        statement.setInt(7, room.getStyle().getVersion());
+        statement.setBoolean(8, room.isSeparateBalcony());
+        statement.setBoolean(9, room.isSeparateBathroom());
+        statement.setString(10, room.getState().toString());
+        statement.setTimestamp(11, new Timestamp(roomEntity.getBegin().getTime()));
+        statement.setTimestamp(12, new Timestamp(roomEntity.getEnd().getTime()));
+        statement.executeUpdate();
     }
 
     private void insertPrices(RoomEntity roomEntity, String roomId, Connection connection) throws SQLException {
         List<Price> prices = roomEntity.getRoom().getPrices();
         for (Price price : prices) {
             PreparedStatement statement = connection.prepareStatement(
-                    "insert into `price`(roomId, rentPerMonth, deposit, servicePerYear, desc) values(?, ?, ?, ?, ?)");
+                    "insert into `price`(`roomId`, `rentPerMonth`, `deposit`, `servicePerYear`, `desc`) values(?, ?, ?, ?, ?)");
             statement.setString(1, roomId);
             statement.setInt(2, price.getRentPerMonth());
             statement.setInt(3, price.getDeposit());
@@ -90,7 +113,7 @@ public class Database implements DatabaseInterface {
         List<Location> locations = roomEntity.getRoom().getHouse().getLocations();
         for (Location location : locations) {
             PreparedStatement statement = connection.prepareStatement(
-                    "insert into `location`(houseId, line, stationName, distance) values(?, ?, ?, ?)");
+                    "insert into `location`(`houseId`, `line`, `stationName`, `distance`) values(?, ?, ?, ?)");
             statement.setString(1, houseId);
             statement.setInt(2, location.getLine());
             statement.setString(3, location.getStationName());
@@ -102,7 +125,7 @@ public class Database implements DatabaseInterface {
     private void insertHouse(RoomEntity roomEntity, String houseId, Connection connection) throws SQLException {
         House house = roomEntity.getRoom().getHouse();
         PreparedStatement statement = connection.prepareStatement(
-                "insert into `house`(houseId, detailName, notDetailName, layout, bedroom, livingroom, currentFloor, totalFloor) values(?, ?, ?, ?, ?, ?, ?, ?)");
+                "insert into `house`(`houseId`, `detailName`, `notDetailName`, `layout`, `bedroom`, `livingroom`, `currentFloor`, `totalFloor`) values(?, ?, ?, ?, ?, ?, ?, ?)");
         statement.setString(1, houseId);
         statement.setString(2, house.getDetailName());
         statement.setString(3, house.getNotDetailName());

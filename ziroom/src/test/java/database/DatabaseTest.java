@@ -118,8 +118,41 @@ public class DatabaseTest {
         Map<String, RoomEntity> roomMap = database.getAllRooms();
         RoomEntity roomEntity = roomMap.get(roomId);
         Assert.assertNotNull(roomEntity);
+        Timestamp date = new Timestamp(new Date().getTime());
+        Room room = roomEntity.getRoom();
+        int newArea = 100;
+        String newNumber = "new number";
+        String newOrientation = "北";
+        boolean newSeparateBalcony = false;
+        boolean newSeparateBathroom = true;
+        State newState = State.Unavailable;
+        int newRentPerMonth = 50;
+        String newStyle = "米苏";
+        int newStyleVersion = 5;
+        room.setArea(newArea);
+        room.setNumber(newNumber);
+        room.setOrientation(newOrientation);
+        room.setSeparateBalcony(newSeparateBalcony);
+        room.setSeparateBathroom(newSeparateBathroom);
+        room.setState(newState);
+        room.getPrices().get(0).setRentPerMonth(newRentPerMonth);
+        room.getStyle().setStyle(newStyle);
+        room.getStyle().setVersion(newStyleVersion);
+        roomEntity.setBegin(date);
+        roomEntity.setEnd(date);
         database.moveRoomToHistoryWithNoHouseChange(roomEntity);
         roomMap = database.getAllRooms();
-        Assert.assertNull(roomMap.get(roomId));
+        roomEntity = roomMap.get(roomId);
+        room = roomEntity.getRoom();
+        Assert.assertEquals(newArea, room.getArea());
+        Assert.assertEquals(newNumber, room.getNumber());
+        Assert.assertEquals(newOrientation, room.getOrientation());
+        Assert.assertEquals(newSeparateBalcony, room.isSeparateBalcony());
+        Assert.assertEquals(newSeparateBathroom, room.isSeparateBathroom());
+        Assert.assertEquals(newState, room.getState());
+        Assert.assertEquals(newRentPerMonth, room.getPrices().get(0).getRentPerMonth());
+        Assert.assertEquals(newStyle, room.getStyle().getStyle());
+        Assert.assertEquals(newStyleVersion, room.getStyle().getVersion());
+        
     }
 }
