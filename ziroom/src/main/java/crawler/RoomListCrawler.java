@@ -1,5 +1,6 @@
 package crawler;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,12 +27,14 @@ public class RoomListCrawler {
 
     private ExecutorService executor;
     private boolean isRunning = false;
+    private boolean isExtendIds;
 
     public RoomListCrawler(ConcurrentSetInterface idSet) {
         this.idSet = idSet;
     }
 
-    public void startCrawler(int threadAmount, int sleepSecond, int resetSecond, String roomListUrl) {
+    public void startCrawler(int threadAmount, int sleepSecond, int resetSecond, String roomListUrl,
+            boolean isExtendIds) {
         if (isRunning) {
             return;
         }
@@ -39,6 +42,7 @@ public class RoomListCrawler {
         this.sleepSecond = sleepSecond;
         this.resetSecond = resetSecond;
         this.roomListUrl = roomListUrl;
+        this.isExtendIds = isExtendIds;
         executor = Executors.newFixedThreadPool(threadAmount);
         for (int i = 0; i < threadAmount; i++) {
             executor.execute(new CrawlerHelper());
@@ -69,6 +73,21 @@ public class RoomListCrawler {
         this.currentPage.set(currentPage);
     }
 
+    private void extendIds(Set<String> ids) {
+        Set<String> extendIds = new HashSet<>();
+        for (String id : ids) {
+            try {
+                int idValue = Integer.parseInt(id);
+                for (int value = idValue - 5; value < idValue + 5; value++) {
+                    extendIds.add(String.valueOf(value));
+                }
+            } catch (Exception e) {
+                // empty
+            }
+        }
+        ids.addAll(extendIds);
+    }
+
     private class CrawlerHelper extends Thread {
         @Override
         public void run() {
@@ -79,6 +98,9 @@ public class RoomListCrawler {
                     System.out.println("Crawling page " + page + ".");
                     String content = httpFetcher.fetchContent(url);
                     Set<String> ids = parser.parseRoomList(content);
+                    if (isExtendIds) {
+                        extendIds(ids);
+                    }
                     idSet.addAll(ids);
                 } catch (HttpFetcherException e) {
                     e.printStackTrace();

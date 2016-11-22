@@ -59,8 +59,9 @@ public class RoomCrawler {
         @Override
         public void run() {
             while (true) {
+                String id = null;
                 try {
-                    String id = idSet.next();
+                    id = idSet.next();
                     System.out.println("Crawling room " + id + ".");
                     String roomPage = String.format(url, id);
                     String content = httpFetcher.fetchContent(roomPage);
@@ -71,7 +72,11 @@ public class RoomCrawler {
                 } catch (HttpFetcherException e) {
                     e.printStackTrace();
                 } catch (ParserException e) {
-                    e.printStackTrace();
+                    if (RoomParser.errRoomNotFound.equals(e.getMessage())) {
+                        System.out.println("No room found " + id);
+                    } else {
+                        e.printStackTrace();
+                    }
                 } catch (InterruptedException e) {
                     // e.printStackTrace();
                     break;

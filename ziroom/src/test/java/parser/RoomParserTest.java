@@ -155,11 +155,14 @@ public class RoomParserTest {
         }
 
         try {
-            parser.parseRoom(normalContent.replaceAll("<p class=\"room_tags clearfix\">",
+            Room room = parser.parseRoom(normalContent.replaceAll("<p class=\"room_tags clearfix\">",
                     "<p class=\"room_tags clearfix\"><span class=\"style\"></span>"));
-            Assert.assertTrue(false);
+            Style style = room.getStyle();
+            Assert.assertEquals("unknown", style.getStyle());
+            Assert.assertEquals(0, style.getVersion());
         } catch (ParserException e) {
-            Assert.assertEquals(RoomParser.errRoomTagsStyleNotUnique, e.getBaseMessage());
+            Assert.assertTrue(false);
+            // Assert.assertEquals(RoomParser.errRoomTagsStyleNotUnique, e.getBaseMessage());
         }
 
         try {

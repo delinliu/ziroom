@@ -32,13 +32,13 @@ public class Main {
         ConcurrentSetInterface idSet = new ConcurrentSet();
         idSet.addAll(roomMap.keySet());
         RoomListCrawler roomListCrawler = new RoomListCrawler(idSet);
-        roomListCrawler.startCrawler(1, 60, 3600, roomListUrl);
+        roomListCrawler.startCrawler(1, 60, 3600, roomListUrl, true);
         if (idSet.size() == 0) {
             Thread.sleep(3000);
         }
         BlockingQueue<Room> roomQueue = new ArrayBlockingQueue<>(1000);
         RoomCrawler crawler = new RoomCrawler(idSet, roomQueue);
-        crawler.startCrawler(1, 5);
+        crawler.startCrawler(1, 1);
         RoomUpdater updater = new RoomUpdater(roomQueue, database, roomMap, houseMap);
         updater.start();
     }
