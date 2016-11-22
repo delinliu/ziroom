@@ -50,6 +50,48 @@ public class Database implements DatabaseInterface {
     }
 
     @Override
+    public void addRoom(RoomEntity roomEntity) throws InterruptedException, SQLException {
+        Connection connection = connectionQueue.take();
+        try {
+            connection.setAutoCommit(false);
+            insertRoom(roomEntity, connection);
+            insertPrices(roomEntity, connection);
+            connection.commit();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            connectionQueue.put(connection);
+        }
+    }
+
+    @Override
+    public void addHouseAndRoom(RoomEntity roomEntity) throws InterruptedException, SQLException {
+        Connection connection = connectionQueue.take();
+        try {
+            connection.setAutoCommit(false);
+            insertHouse(roomEntity, connection);
+            insertRoom(roomEntity, connection);
+            insertPrices(roomEntity, connection);
+            insertLocations(roomEntity, connection);
+            connection.commit();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            connectionQueue.put(connection);
+        }
+    }
+
+    @Override
     public void moveRoomToHistoryWithHouseChange(List<RoomEntity> rooms) throws InterruptedException, SQLException {
         if (rooms.isEmpty()) {
             return;
@@ -78,11 +120,11 @@ public class Database implements DatabaseInterface {
             }
             deleteLocation(houseId, connection);
             deleteHouse(houseIdLocal, connection);
-            insertHouse(rooms.get(0), houseId, connection);
-            insertLocations(rooms.get(0), houseId, connection);
+            insertHouse(rooms.get(0), connection);
+            insertLocations(rooms.get(0), connection);
             for (RoomEntity roomEntity : rooms) {
-                insertRoom(roomEntity, roomEntity.getRoom().getRoomId(), houseId, connection);
-                insertPrices(roomEntity, roomEntity.getRoom().getRoomId(), connection);
+                insertRoom(roomEntity, connection);
+                insertPrices(roomEntity, connection);
             }
             connection.commit();
         } catch (Exception e) {
@@ -114,10 +156,10 @@ public class Database implements DatabaseInterface {
             deletePrice(roomId, connection);
             deleteRoom(roomIdLocal, connection);
             deleteHouse(houseIdLocal, connection);
-            insertHouse(roomEntity, houseId, connection);
-            insertLocations(roomEntity, houseId, connection);
-            insertRoom(roomEntity, roomId, houseId, connection);
-            insertPrices(roomEntity, roomId, connection);
+            insertHouse(roomEntity, connection);
+            insertLocations(roomEntity, connection);
+            insertRoom(roomEntity, connection);
+            insertPrices(roomEntity, connection);
             connection.commit();
         } catch (Exception e) {
             throw e;
@@ -131,9 +173,10 @@ public class Database implements DatabaseInterface {
         }
     }
 
-    private void insertRoom(RoomEntity roomEntity, String roomId, String houseId, Connection connection)
-            throws SQLException {
+    private void insertRoom(RoomEntity roomEntity, Connection connection) throws SQLException {
         Room room = roomEntity.getRoom();
+        String roomId = room.getRoomId();
+        String houseId = room.getHouse().getHouseId();
         PreparedStatement statement = connection.prepareStatement(
                 "insert into `room`(`houseId`, `roomId`, `number`, `area`, `orientation`, `style`, `styleVersion`, `separateBalcony`, `separateBathroom`, `state`, `begin`, `end`)"
                         + " values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -152,7 +195,8 @@ public class Database implements DatabaseInterface {
         statement.executeUpdate();
     }
 
-    private void insertPrices(RoomEntity roomEntity, String roomId, Connection connection) throws SQLException {
+    private void insertPrices(RoomEntity roomEntity, Connection connection) throws SQLException {
+        String roomId = roomEntity.getRoom().getRoomId();
         List<Price> prices = roomEntity.getRoom().getPrices();
         for (Price price : prices) {
             PreparedStatement statement = connection.prepareStatement(
@@ -166,7 +210,8 @@ public class Database implements DatabaseInterface {
         }
     }
 
-    private void insertLocations(RoomEntity roomEntity, String houseId, Connection connection) throws SQLException {
+    private void insertLocations(RoomEntity roomEntity, Connection connection) throws SQLException {
+        String houseId = roomEntity.getRoom().getHouse().getHouseId();
         List<Location> locations = roomEntity.getRoom().getHouse().getLocations();
         for (Location location : locations) {
             PreparedStatement statement = connection.prepareStatement(
@@ -179,8 +224,9 @@ public class Database implements DatabaseInterface {
         }
     }
 
-    private void insertHouse(RoomEntity roomEntity, String houseId, Connection connection) throws SQLException {
+    private void insertHouse(RoomEntity roomEntity, Connection connection) throws SQLException {
         House house = roomEntity.getRoom().getHouse();
+        String houseId = house.getHouseId();
         PreparedStatement statement = connection.prepareStatement(
                 "insert into `house`(`houseId`, `detailName`, `notDetailName`, `layout`, `bedroom`, `livingroom`, `currentFloor`, `totalFloor`) values(?, ?, ?, ?, ?, ?, ?, ?)");
         statement.setString(1, houseId);
@@ -426,5 +472,4 @@ public class Database implements DatabaseInterface {
         }
         return priceMap;
     }
-
 }

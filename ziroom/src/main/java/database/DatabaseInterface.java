@@ -34,4 +34,15 @@ public interface DatabaseInterface {
      * Insert the rooms, the house, the prices and the locations.
      */
     void moveRoomToHistoryWithHouseChange(List<RoomEntity> rooms) throws InterruptedException, SQLException;
+
+    /**
+     * Database has no information of the room and hosue. Just insert them into database. 
+     */
+    void addHouseAndRoom(RoomEntity roomEntity) throws InterruptedException, SQLException;
+
+    /**
+     * Database has information of the house but no information of the room.
+     * Just insert the room into database.
+     */
+    void addRoom(RoomEntity roomEntity) throws InterruptedException, SQLException;
 }

@@ -22,8 +22,9 @@ import entity.State;
 public class DatabaseTest {
 
     private String roomId = "1000";
+    private String roomId2 = "2000";
 
-    private void initDatabase(Database database) throws NoSuchMethodException, SecurityException,
+    private void clearDatabase(Database database) throws NoSuchMethodException, SecurityException,
             IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException {
         Method method = Database.class.getDeclaredMethod("createOneConnection", new Class<?>[] {});
         method.setAccessible(true);
@@ -38,6 +39,18 @@ public class DatabaseTest {
         statement.execute("delete from price where id>0;");
         statement.execute("delete from room where id>0;");
         statement.execute("delete from house where id>0;");
+        connection.commit();
+        connection.setAutoCommit(true);
+        connection.close();
+    }
+
+    private void insertRoomIntoDatabase(Database database) throws NoSuchMethodException, SecurityException,
+            IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException {
+        Method method = Database.class.getDeclaredMethod("createOneConnection", new Class<?>[] {});
+        method.setAccessible(true);
+        Connection connection = (Connection) method.invoke(database);
+        connection.setAutoCommit(false);
+        Statement statement = connection.createStatement();
         statement.execute(
                 "INSERT INTO `house` VALUES ('1', '1', 'detail name', 'not detail name', 'layout', '3', '1', '5', '10');");
         statement.execute("INSERT INTO `location` VALUES ('10', '1', '6', 'station name', '100');");
@@ -60,9 +73,84 @@ public class DatabaseTest {
         connection.close();
     }
 
+    private void initDatabase(Database database) throws NoSuchMethodException, SecurityException,
+            IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException {
+        clearDatabase(database);
+        insertRoomIntoDatabase(database);
+    }
+
     private String url = "jdbc:mysql://127.0.0.1/ziroom_test";
     private String user = "root";
     private String password = "123456";
+
+    @Test
+    public void testAddRoom() throws Exception {
+        Database database = new Database(1, url, user, password);
+        initDatabase(database);
+        Map<String, RoomEntity> roomMap = new HashMap<>();
+        Map<String, HouseEntity> houseMap = new HashMap<>();
+        database.getAllRooms(roomMap, houseMap);
+
+        RoomEntity roomEntity = roomMap.get(roomId);
+        RoomEntity roomEntity2 = roomMap.get(roomId2);
+        clearDatabase(database);
+        database.addHouseAndRoom(roomEntity2);
+        database.addRoom(roomEntity);
+        roomMap.clear();
+        houseMap.clear();
+        database.getAllRooms(roomMap, houseMap);
+        Assert.assertEquals(2, roomMap.size());
+        Assert.assertEquals(1, houseMap.size());
+        roomEntity = roomMap.get(roomId);
+        assertTheRoom(roomEntity.getRoom());
+        assertTheHouse(roomEntity.getRoom().getHouse());
+    }
+
+    @Test
+    public void testAddHouseAndRoom() throws Exception {
+        Database database = new Database(1, url, user, password);
+        initDatabase(database);
+        Map<String, RoomEntity> roomMap = new HashMap<>();
+        Map<String, HouseEntity> houseMap = new HashMap<>();
+        database.getAllRooms(roomMap, houseMap);
+
+        RoomEntity roomEntity = roomMap.get(roomId);
+        clearDatabase(database);
+        database.addHouseAndRoom(roomEntity);
+        roomMap.clear();
+        houseMap.clear();
+        database.getAllRooms(roomMap, houseMap);
+        Assert.assertEquals(1, roomMap.size());
+        Assert.assertEquals(1, houseMap.size());
+        roomEntity = roomMap.get(roomId);
+        assertTheRoom(roomEntity.getRoom());
+        assertTheHouse(roomEntity.getRoom().getHouse());
+    }
+
+    private void assertTheRoom(Room room) {
+        Assert.assertEquals("1000", room.getRoomId());
+        Assert.assertEquals("number", room.getNumber());
+        Assert.assertEquals(10, room.getArea());
+        Assert.assertEquals("南", room.getOrientation());
+        Assert.assertEquals("木棉", room.getStyle().getStyle());
+        Assert.assertEquals(4, room.getStyle().getVersion());
+        Assert.assertEquals(true, room.isSeparateBalcony());
+        Assert.assertEquals(false, room.isSeparateBathroom());
+        Assert.assertEquals(State.Available, room.getState());
+        Assert.assertEquals(4, room.getPrices().size());
+    }
+
+    private void assertTheHouse(House house) {
+        Assert.assertEquals("1", house.getHouseId());
+        Assert.assertEquals("detail name", house.getDetailName());
+        Assert.assertEquals("not detail name", house.getNotDetailName());
+        Assert.assertEquals("layout", house.getLayout());
+        Assert.assertEquals(3, house.getBedroom());
+        Assert.assertEquals(1, house.getLivingroom());
+        Assert.assertEquals(5, house.getCurrentFloor());
+        Assert.assertEquals(10, house.getTotalFloor());
+        Assert.assertEquals(3, house.getLocations().size());
+    }
 
     @Test
     public void testGetRoom() throws ClassNotFoundException, InterruptedException, SQLException, NoSuchMethodException,
@@ -75,28 +163,9 @@ public class DatabaseTest {
         Assert.assertEquals(2, roomMap.size());
         RoomEntity roomEntity = roomMap.get(roomId);
         Room room = roomEntity.getRoom();
-        Assert.assertNotNull(roomEntity);
         Assert.assertEquals(10000, roomEntity.getRoomIdLocal());
-        Assert.assertEquals("1", room.getHouse().getHouseId());
-        Assert.assertEquals("1000", room.getRoomId());
-        Assert.assertEquals("number", room.getNumber());
-        Assert.assertEquals(10, room.getArea());
-        Assert.assertEquals("南", room.getOrientation());
-        Assert.assertEquals("木棉", room.getStyle().getStyle());
-        Assert.assertEquals(4, room.getStyle().getVersion());
-        Assert.assertEquals(true, room.isSeparateBalcony());
-        Assert.assertEquals(false, room.isSeparateBathroom());
-        Assert.assertEquals(State.Available, room.getState());
-        Assert.assertEquals(4, room.getPrices().size());
-        House house = room.getHouse();
-        Assert.assertEquals("detail name", house.getDetailName());
-        Assert.assertEquals("not detail name", house.getNotDetailName());
-        Assert.assertEquals("layout", house.getLayout());
-        Assert.assertEquals(3, house.getBedroom());
-        Assert.assertEquals(1, house.getLivingroom());
-        Assert.assertEquals(5, house.getCurrentFloor());
-        Assert.assertEquals(10, house.getTotalFloor());
-        Assert.assertEquals(3, house.getLocations().size());
+        assertTheRoom(room);
+        assertTheHouse(room.getHouse());
     }
 
     @Test
