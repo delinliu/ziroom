@@ -3,6 +3,7 @@ package database;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface DatabaseInterface {
 
@@ -45,4 +46,9 @@ public interface DatabaseInterface {
      * Just insert the room into database.
      */
     void addRoom(RoomEntity roomEntity) throws InterruptedException, SQLException;
+
+    /**
+     * Find all room ids of the house. 
+     */
+    Set<String> getRoomIds(String houseId) throws InterruptedException, SQLException;
 }

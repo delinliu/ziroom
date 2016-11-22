@@ -34,6 +34,33 @@ public class Room {
     private List<Price> prices;
 
     @Override
+    public boolean equals(Object roomObj) {
+        if (roomObj == null) {
+            return false;
+        }
+        if (!(roomObj instanceof Room)) {
+            return false;
+        }
+        Room room = (Room) roomObj;
+        if (!roomId.equals(room.roomId) || !number.equals(room.number) || area != room.area
+                || !orientation.equals(room.orientation) || !style.equals(room.style)
+                || separateBalcony != room.separateBalcony || separateBathroom != room.separateBathroom
+                || state != room.state) {
+            return false;
+        }
+        if (prices.size() != room.prices.size()) {
+            return false;
+        }
+        for (int i = 0; i < prices.size(); i++) {
+            if (!prices.get(i).equals(room.prices.get(i))) {
+                return false;
+            }
+        }
+        return true;
+
+    }
+
+    @Override
     public String toString() {
         return "[" + roomId + "] [" + house.getDetailName() + "-" + number + "] ["
                 + house.getLocations().get(0).getLine() + "号线-" + house.getLocations().get(0).getStationName() + "-"

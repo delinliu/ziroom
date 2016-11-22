@@ -8,6 +8,18 @@ public class Style {
     // 风格版本（如：4.0）
     private int version;
 
+    @Override
+    public boolean equals(Object styleObj) {
+        if (styleObj == null || !(styleObj instanceof Style)) {
+            return false;
+        }
+        Style s = (Style) styleObj;
+        if (!style.equals(s.style) || version != s.version) {
+            return false;
+        }
+        return true;
+    }
+
     public String getStyle() {
         return style;
     }

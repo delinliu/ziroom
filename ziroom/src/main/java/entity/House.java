@@ -30,6 +30,31 @@ public class House {
     // 距离地铁站的距离
     private List<Location> locations;
 
+    @Override
+    public boolean equals(Object houseObj) {
+        if (houseObj == null) {
+            return false;
+        }
+        if (!(houseObj instanceof House)) {
+            return false;
+        }
+        House house = (House) houseObj;
+        if (!houseId.equals(house.houseId) || !detailName.equals(house.detailName) || !layout.equals(house.layout)
+                || bedroom != house.bedroom || livingroom != house.livingroom || currentFloor != house.currentFloor
+                || totalFloor != house.totalFloor) {
+            return false;
+        }
+        if (locations.size() != house.locations.size()) {
+            return false;
+        }
+        for (int i = 0; i < locations.size(); i++) {
+            if (!locations.get(i).equals(house.locations.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public String getHouseId() {
         return houseId;
     }

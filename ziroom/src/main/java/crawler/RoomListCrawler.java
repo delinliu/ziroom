@@ -76,10 +76,10 @@ public class RoomListCrawler {
                 int page = currentPage.getAndIncrement();
                 String url = roomListUrl + "?p=" + page;
                 try {
+                    System.out.println("Crawling page " + page + ".");
                     String content = httpFetcher.fetchContent(url);
                     Set<String> ids = parser.parseRoomList(content);
                     idSet.addAll(ids);
-                    System.out.println("Crawled page " + page + ".");
                 } catch (HttpFetcherException e) {
                     e.printStackTrace();
                 } catch (ParserException e) {

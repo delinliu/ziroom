@@ -1,6 +1,7 @@
 package parser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -247,6 +248,7 @@ public class RoomParser implements RoomParserInterface {
         for (int i = 1; i < trs.size(); i++) {
             parseRoomPrice(house, room, trs.get(i));
         }
+        Collections.sort(room.getPrices());
     }
 
     /**
@@ -467,6 +469,7 @@ public class RoomParser implements RoomParserInterface {
             location.setDistance(distance);
             locations.add(location);
         }
+        Collections.sort(locations);
         house.setLocations(locations);
     }
 

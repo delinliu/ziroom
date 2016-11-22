@@ -8,10 +8,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -108,6 +111,32 @@ public class Database implements DatabaseInterface {
     }
 
     @Override
+    public Set<String> getRoomIds(String houseId) throws InterruptedException, SQLException {
+        Connection connection = connectionQueue.take();
+        try {
+            Set<String> ids = new HashSet<>();
+            connection.setAutoCommit(false);
+            PreparedStatement statement = connection.prepareStatement("select roomId from room where houseId = ?");
+            statement.setString(1, houseId);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ids.add(resultSet.getString("roomId"));
+            }
+            connection.commit();
+            return ids;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            connectionQueue.put(connection);
+        }
+    }
+
+    @Override
     public void moveRoomToHistoryWithHouseChange(List<RoomEntity> rooms) throws InterruptedException, SQLException {
         if (rooms.isEmpty()) {
             return;
@@ -115,8 +144,10 @@ public class Database implements DatabaseInterface {
         int houseIdLocal = rooms.get(0).getHouseIdLocal();
         House house = rooms.get(0).getRoom().getHouse();
         String houseId = rooms.get(0).getRoom().getHouse().getHouseId();
+        HouseEntity houseEntity = rooms.get(0).getHouseEntity();
         for (RoomEntity room : rooms) {
-            if (room.getHouseIdLocal() != houseIdLocal || room.getRoom().getHouse() != house) {
+            if (room.getHouseIdLocal() != houseIdLocal || room.getRoom().getHouse() != house
+                    || room.getHouseEntity() != houseEntity) {
                 throw new IllegalArgumentException("Those rooms do NOT share one house.");
             }
         }
@@ -141,6 +172,7 @@ public class Database implements DatabaseInterface {
             for (RoomEntity roomEntity : rooms) {
                 insertRoom(roomEntity, connection);
                 insertPrices(roomEntity, connection);
+                loadRoomAndHouseIdLocal(connection, roomEntity);
             }
             connection.commit();
         } catch (Exception e) {
@@ -384,6 +416,7 @@ public class Database implements DatabaseInterface {
             house.setCurrentFloor(currentFloor);
             house.setTotalFloor(totalFloor);
             house.setLocations(locationMap.get(houseId));
+            Collections.sort(house.getLocations());
             HouseEntity houseEntity = new HouseEntity();
             houseEntity.setHouse(house);
             houseEntity.setHouseIdLocal(houseIdLocal);
@@ -429,6 +462,7 @@ public class Database implements DatabaseInterface {
         room.setSeparateBalcony(separateBalcony);
         room.setSeparateBathroom(separateBathroom);
         room.setPrices(priceMap.get(roomId));
+        Collections.sort(room.getPrices());
         if (State.Available.toString().equals(state)) {
             room.setState(State.Available);
         } else if (State.Unavailable.toString().equals(state)) {

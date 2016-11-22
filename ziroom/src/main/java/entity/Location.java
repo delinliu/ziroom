@@ -36,7 +36,40 @@ public class Location implements Comparable<Location> {
     }
 
     @Override
+    public boolean equals(Object locationObj) {
+        if (locationObj == null) {
+            return false;
+        }
+        if (!(locationObj instanceof Location)) {
+            return false;
+        }
+        Location location = (Location) locationObj;
+        if (line != location.line || distance != location.distance || !stationName.equals(location.stationName)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public int compareTo(Location o) {
-        return distance < o.distance ? -1 : (distance > o.distance ? 1 : 0);
+        if (distance < o.distance) {
+            return -1;
+        }
+        if (distance > o.distance) {
+            return 1;
+        }
+        if (line < o.line) {
+            return -1;
+        }
+        if (line > o.line) {
+            return 1;
+        }
+        if (stationName.hashCode() < o.stationName.hashCode()) {
+            return -1;
+        }
+        if (stationName.hashCode() > o.stationName.hashCode()) {
+            return 1;
+        }
+        return 0;
     }
 }

@@ -61,11 +61,11 @@ public class RoomCrawler {
             while (true) {
                 try {
                     String id = idSet.next();
+                    System.out.println("Crawling room " + id + ".");
                     String roomPage = String.format(url, id);
                     String content = httpFetcher.fetchContent(roomPage);
                     Room room = parser.parseRoom(content);
                     roomQueue.put(room);
-                    System.out.println("Crawled room " + id + ".");
                 } catch (NoSuchElementException e) {
                     e.printStackTrace();
                 } catch (HttpFetcherException e) {
