@@ -173,18 +173,24 @@ public class RoomParser implements RoomParserInterface {
             room.setSeparateBalcony(true);
         }
 
+        String style;
+        int version;
+
         Elements styles = roomTag.getElementsByClass("style");
         if (!isUnique(styles)) {
-            throw new ParserException(errRoomTagsStyleNotUnique, room.getRoomId());
-        }
-        String styleText = styles.get(0).text();
-        Matcher matcher = Pattern.compile("风格([0-9]+\\.[0-9]+) *(.*)").matcher(styleText);
-        if (!matcher.find()) {
-            throw new ParserException(errRoomTagsStyleFormat, room.getRoomId());
-        }
+            // throw new ParserException(errRoomTagsStyleNotUnique, room.getRoomId());
+            style = "unknown";
+            version = 0;
+        } else {
+            String styleText = styles.get(0).text();
+            Matcher matcher = Pattern.compile("风格([0-9]+\\.[0-9]+) *(.*)").matcher(styleText);
+            if (!matcher.find()) {
+                throw new ParserException(errRoomTagsStyleFormat, room.getRoomId());
+            }
 
-        int version = (int) (Double.parseDouble(matcher.group(1)) * 10);
-        String style = matcher.group(2);
+            version = (int) (Double.parseDouble(matcher.group(1)) * 10);
+            style = matcher.group(2);
+        }
         Style roomStyle = new Style();
         roomStyle.setVersion(version);
         roomStyle.setStyle(style);
