@@ -37,11 +37,11 @@ public class RoomParserTest {
         List<Price> prices = room.getPrices();
         Assert.assertNotNull(prices);
         Assert.assertEquals(4, prices.size());
-        Price firstPrice = prices.get(0);
-        Assert.assertEquals(2160, firstPrice.getDeposit());
-        Assert.assertEquals("月付", firstPrice.getDesc());
-        Assert.assertEquals(2160, firstPrice.getRentPerMonth());
-        Assert.assertEquals(2592, firstPrice.getServicePerYear());
+        Price lastPrice = prices.get(3);
+        Assert.assertEquals(2160, lastPrice.getDeposit());
+        Assert.assertEquals("月付", lastPrice.getDesc());
+        Assert.assertEquals(2160, lastPrice.getRentPerMonth());
+        Assert.assertEquals(2592, lastPrice.getServicePerYear());
 
         Style style = room.getStyle();
         Assert.assertNotNull(style);

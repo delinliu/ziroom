@@ -84,6 +84,9 @@ public class Database implements DatabaseInterface {
             int houseIdLocal = resultSet.getInt("houseIdLocal");
             roomEntity.setHouseIdLocal(houseIdLocal);
             roomEntity.setRoomIdLocal(roomIdLocal);
+            if (roomEntity.getHouseEntity() != null) {
+                roomEntity.getHouseEntity().setHouseIdLocal(houseIdLocal);
+            }
         }
     }
 
@@ -208,6 +211,7 @@ public class Database implements DatabaseInterface {
             insertLocations(roomEntity, connection);
             insertRoom(roomEntity, connection);
             insertPrices(roomEntity, connection);
+            loadRoomAndHouseIdLocal(connection, roomEntity);
             connection.commit();
         } catch (Exception e) {
             throw e;
@@ -360,7 +364,7 @@ public class Database implements DatabaseInterface {
         Connection connection = connectionQueue.take();
         try {
             PreparedStatement statement = connection.prepareStatement("update room set end = ? where id = ?");
-            statement.setTimestamp(1, new Timestamp(roomEntity.getNewEnd().getTime()));
+            statement.setTimestamp(1, new Timestamp(roomEntity.getEnd().getTime()));
             statement.setInt(2, roomEntity.getRoomIdLocal());
             statement.executeUpdate();
             statement.close();

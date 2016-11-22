@@ -55,7 +55,6 @@ public class RoomUpdater {
             roomEntity.setRoom(room);
             roomEntity.setBegin(now);
             roomEntity.setEnd(now);
-            roomEntity.setNewEnd(now);
             roomEntity.setHouseEntity(houseEntity);
             roomEntity.setRoomIdLocal(-1);
             database.addHouseAndRoom(roomEntity);
@@ -70,7 +69,6 @@ public class RoomUpdater {
             roomEntity.setRoom(room);
             roomEntity.setBegin(now);
             roomEntity.setEnd(now);
-            roomEntity.setNewEnd(now);
             roomEntity.setRoomIdLocal(-1);
             database.addRoom(roomEntity);
             roomEntity.setHouseEntity(houseEntity);
@@ -79,23 +77,22 @@ public class RoomUpdater {
 
             // House info is changed, so flush the new house into database for all rooms in the house.
             if (!house.equals(houseEntity.getHouse())) {
-                System.out.println("Updater, house[%s] is changed.");
+                System.out.println(String.format("Updater, house[%s] is changed.", houseId));
                 houseEntity.setHouse(house);
-                int oldHouseIdLocal = houseEntity.getHouseIdLocal();
                 Set<String> roomIds = database.getRoomIds(houseId);
                 List<RoomEntity> roomEntities = new ArrayList<>();
                 for (String rId : roomIds) {
                     RoomEntity rEntity = roomMap.get(rId);
                     rEntity.setBegin(now);
-                    rEntity.setNewEnd(now);
+                    rEntity.setEnd(now);
                     rEntity.getRoom().setHouse(house);
                     roomEntities.add(rEntity);
                 }
                 database.moveRoomToHistoryWithHouseChange(roomEntities);
-                int newHouseIdLocal = roomEntity.getHouseIdLocal();
-                houseEntity.setHouseIdLocal(newHouseIdLocal);
-                System.out.println(oldHouseIdLocal + "->" + newHouseIdLocal);
-                System.out.println(oldHouseIdLocal + "->" + houseEntity.getHouseIdLocal());
+                for (String rId : roomIds) {
+                    RoomEntity rEntity = roomMap.get(rId);
+                    rEntity.getHouseEntity().setHouseIdLocal(rEntity.getHouseIdLocal());
+                }
             }
         } else if (houseEntity != null && roomEntity != null) {
             System.out.println(String.format("Updater, old house[%s] and old room[%s].", houseId, roomId));
@@ -110,22 +107,31 @@ public class RoomUpdater {
                         rEntity.setRoom(room);
                     }
                     rEntity.setBegin(now);
-                    rEntity.setNewEnd(now);
+                    rEntity.setEnd(now);
                     rEntity.getRoom().setHouse(house);
                     roomEntities.add(rEntity);
                 }
                 database.moveRoomToHistoryWithHouseChange(roomEntities);
+                for (String rId : roomIds) {
+                    RoomEntity rEntity = roomMap.get(rId);
+                    rEntity.getHouseEntity().setHouseIdLocal(rEntity.getHouseIdLocal());
+                }
             } else if (!room.equals(roomEntity.getRoom())) { // House not changed, Room changed
                 System.out.println(String.format("Updater, room[%s] is changed.", roomId));
                 room.setHouse(houseEntity.getHouse());
                 roomEntity.setRoom(room);
                 roomEntity.setBegin(now);
-                roomEntity.setNewEnd(now);
+                roomEntity.setEnd(now);
                 database.moveRoomToHistoryWithNoHouseChange(roomEntity);
+                roomEntity.getHouseEntity().setHouseIdLocal(roomEntity.getHouseIdLocal());
+                Set<String> roomIds = database.getRoomIds(houseId);
+                for (String rId : roomIds) {
+                    RoomEntity rEntity = roomMap.get(rId);
+                    rEntity.setHouseIdLocal(roomEntity.getHouseIdLocal());
+                }
             } else { // House not changed, Room not changed
                 System.out.println(String.format("Updater, just update time for room[%s].", roomId));
                 roomEntity.setEnd(now);
-                roomEntity.setNewEnd(now);
                 database.updateRoomEndTime(roomEntity);
             }
         } else { // houseEntity == null && roomEntity != null, it's impossible

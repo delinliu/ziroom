@@ -12,7 +12,7 @@ public class RoomEntity {
     private int houseIdLocal;
     private Date begin;
     private Date end;
-    private Date newEnd = null;
+//    private Date newEnd = null;
 
     private boolean isTimeChanged = false;
     private boolean isRoomChanged = false;
@@ -67,13 +67,13 @@ public class RoomEntity {
         this.end = end;
     }
 
-    public Date getNewEnd() {
-        return newEnd;
-    }
-
-    public void setNewEnd(Date newEnd) {
-        this.newEnd = newEnd;
-    }
+    //    public Date getNewEnd() {
+    //        return newEnd;
+    //    }
+    //
+    //    public void setNewEnd(Date newEnd) {
+    //        this.newEnd = newEnd;
+    //    }
 
     public boolean isTimeChanged() {
         return isTimeChanged;

@@ -145,7 +145,7 @@ public class DatabaseTest {
         database.getAllRooms(roomMap, houseMap);
         RoomEntity roomEntity = roomMap.get(roomId);
         Timestamp date = new Timestamp(new Date().getTime());
-        roomEntity.setNewEnd(date);
+        roomEntity.setEnd(date);
         database.updateRoomEndTime(roomEntity);
         roomMap.clear();
         houseMap.clear();
