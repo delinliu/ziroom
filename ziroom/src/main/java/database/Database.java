@@ -56,6 +56,7 @@ public class Database implements DatabaseInterface {
             connection.setAutoCommit(false);
             insertRoom(roomEntity, connection);
             insertPrices(roomEntity, connection);
+            loadRoomAndHouseIdLocal(connection, roomEntity);
             connection.commit();
         } catch (Exception e) {
             throw e;
@@ -69,6 +70,20 @@ public class Database implements DatabaseInterface {
         }
     }
 
+    private void loadRoomAndHouseIdLocal(Connection connection, RoomEntity roomEntity) throws SQLException {
+        PreparedStatement statement = connection
+                .prepareStatement("select room.id as roomIdLocal, house.id as houseIdLocal "
+                        + "from room left join house on house.houseId=room.houseId " + "where room.roomId = ?");
+        statement.setString(1, roomEntity.getRoom().getRoomId());
+        ResultSet resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            int roomIdLocal = resultSet.getInt("roomIdLocal");
+            int houseIdLocal = resultSet.getInt("houseIdLocal");
+            roomEntity.setHouseIdLocal(houseIdLocal);
+            roomEntity.setRoomIdLocal(roomIdLocal);
+        }
+    }
+
     @Override
     public void addHouseAndRoom(RoomEntity roomEntity) throws InterruptedException, SQLException {
         Connection connection = connectionQueue.take();
@@ -78,6 +93,7 @@ public class Database implements DatabaseInterface {
             insertRoom(roomEntity, connection);
             insertPrices(roomEntity, connection);
             insertLocations(roomEntity, connection);
+            loadRoomAndHouseIdLocal(connection, roomEntity);
             connection.commit();
         } catch (Exception e) {
             throw e;
@@ -383,48 +399,54 @@ public class Database implements DatabaseInterface {
         Map<String, RoomEntity> roomMap = new HashMap<>();
         while (resultSet.next()) {
 
-            int roomIdLocal = resultSet.getInt("id");
-            String houseId = resultSet.getString("houseId");
-            String roomId = resultSet.getString("roomId");
-            String number = resultSet.getString("number");
-            int area = resultSet.getInt("area");
-            String orientation = resultSet.getString("orientation");
-            String style = resultSet.getString("style");
-            int styleVersion = resultSet.getInt("styleVersion");
-            boolean separateBalcony = resultSet.getBoolean("separateBalcony");
-            boolean separateBathroom = resultSet.getBoolean("separateBathroom");
-            String state = resultSet.getString("state");
-            Date begin = resultSet.getTimestamp("begin");
-            Date end = resultSet.getTimestamp("end");
-            Room room = new Room();
-            room.setHouse(houseMap.get(houseId).getHouse());
-            room.setRoomId(roomId);
-            room.setNumber(number);
-            room.setArea(area);
-            room.setOrientation(orientation);
-            room.setSeparateBalcony(separateBalcony);
-            room.setSeparateBathroom(separateBathroom);
-            room.setPrices(priceMap.get(roomId));
-            if (State.Available.toString().equals(state)) {
-                room.setState(State.Available);
-            } else if (State.Unavailable.toString().equals(state)) {
-                room.setState(State.Unavailable);
-            }
-            Style st = new Style();
-            st.setStyle(style);
-            st.setVersion(styleVersion);
-            room.setStyle(st);
-
-            RoomEntity roomEntity = new RoomEntity();
-            roomEntity.setHouseEntity(houseMap.get(houseId));
-            roomEntity.setBegin(begin);
-            roomEntity.setEnd(end);
-            roomEntity.setRoomIdLocal(roomIdLocal);
-            roomEntity.setHouseIdLocal(houseMap.get(houseId).getHouseIdLocal());
-            roomEntity.setRoom(room);
-            roomMap.put(roomId, roomEntity);
+            RoomEntity roomEntity = loadRoom(priceMap, houseMap, resultSet);
+            roomMap.put(roomEntity.getRoom().getRoomId(), roomEntity);
         }
         return roomMap;
+    }
+
+    private RoomEntity loadRoom(Map<String, List<Price>> priceMap, Map<String, HouseEntity> houseMap,
+            ResultSet resultSet) throws SQLException {
+        int roomIdLocal = resultSet.getInt("id");
+        String houseId = resultSet.getString("houseId");
+        String roomId = resultSet.getString("roomId");
+        String number = resultSet.getString("number");
+        int area = resultSet.getInt("area");
+        String orientation = resultSet.getString("orientation");
+        String style = resultSet.getString("style");
+        int styleVersion = resultSet.getInt("styleVersion");
+        boolean separateBalcony = resultSet.getBoolean("separateBalcony");
+        boolean separateBathroom = resultSet.getBoolean("separateBathroom");
+        String state = resultSet.getString("state");
+        Date begin = resultSet.getTimestamp("begin");
+        Date end = resultSet.getTimestamp("end");
+        Room room = new Room();
+        room.setHouse(houseMap.get(houseId).getHouse());
+        room.setRoomId(roomId);
+        room.setNumber(number);
+        room.setArea(area);
+        room.setOrientation(orientation);
+        room.setSeparateBalcony(separateBalcony);
+        room.setSeparateBathroom(separateBathroom);
+        room.setPrices(priceMap.get(roomId));
+        if (State.Available.toString().equals(state)) {
+            room.setState(State.Available);
+        } else if (State.Unavailable.toString().equals(state)) {
+            room.setState(State.Unavailable);
+        }
+        Style st = new Style();
+        st.setStyle(style);
+        st.setVersion(styleVersion);
+        room.setStyle(st);
+
+        RoomEntity roomEntity = new RoomEntity();
+        roomEntity.setHouseEntity(houseMap.get(houseId));
+        roomEntity.setBegin(begin);
+        roomEntity.setEnd(end);
+        roomEntity.setRoomIdLocal(roomIdLocal);
+        roomEntity.setHouseIdLocal(houseMap.get(houseId).getHouseIdLocal());
+        roomEntity.setRoom(room);
+        return roomEntity;
     }
 
     private Map<String, List<Location>> loadAllLocations(Statement statement) throws SQLException {

@@ -95,7 +95,11 @@ public class DatabaseTest {
         RoomEntity roomEntity2 = roomMap.get(roomId2);
         clearDatabase(database);
         database.addHouseAndRoom(roomEntity2);
+        roomEntity.setHouseIdLocal(-1);
+        roomEntity.setRoomIdLocal(-1);
         database.addRoom(roomEntity);
+        int roomIdLocal = roomEntity.getRoomIdLocal();
+        int houseIdlocal = roomEntity.getHouseIdLocal();
         roomMap.clear();
         houseMap.clear();
         database.getAllRooms(roomMap, houseMap);
@@ -104,6 +108,8 @@ public class DatabaseTest {
         roomEntity = roomMap.get(roomId);
         assertTheRoom(roomEntity.getRoom());
         assertTheHouse(roomEntity.getRoom().getHouse());
+        Assert.assertEquals(roomIdLocal, roomEntity.getRoomIdLocal());
+        Assert.assertEquals(houseIdlocal, roomEntity.getHouseIdLocal());
     }
 
     @Test
@@ -116,7 +122,11 @@ public class DatabaseTest {
 
         RoomEntity roomEntity = roomMap.get(roomId);
         clearDatabase(database);
+        roomEntity.setHouseIdLocal(-1);
+        roomEntity.setRoomIdLocal(-1);
         database.addHouseAndRoom(roomEntity);
+        int roomIdLocal = roomEntity.getRoomIdLocal();
+        int houseIdlocal = roomEntity.getHouseIdLocal();
         roomMap.clear();
         houseMap.clear();
         database.getAllRooms(roomMap, houseMap);
@@ -125,6 +135,8 @@ public class DatabaseTest {
         roomEntity = roomMap.get(roomId);
         assertTheRoom(roomEntity.getRoom());
         assertTheHouse(roomEntity.getRoom().getHouse());
+        Assert.assertEquals(roomIdLocal, roomEntity.getRoomIdLocal());
+        Assert.assertEquals(houseIdlocal, roomEntity.getHouseIdLocal());
     }
 
     private void assertTheRoom(Room room) {
