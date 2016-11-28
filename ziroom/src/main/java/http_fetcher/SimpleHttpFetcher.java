@@ -21,6 +21,7 @@ final public class SimpleHttpFetcher implements HttpFetcher {
             // Open the connection
             URL u = new URL(url);
             URLConnection connection = u.openConnection();
+            connection.setReadTimeout(3000);
             HttpURLConnection htCon = (HttpURLConnection) connection;
             int res = htCon.getResponseCode();
 

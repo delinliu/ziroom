@@ -65,8 +65,11 @@ public class RoomCrawler {
                     System.out.println("Crawling room " + id + ".");
                     String roomPage = String.format(url, id);
                     String content = httpFetcher.fetchContent(roomPage);
+                    System.out.println("Crawled  room " + id + ".");
                     Room room = parser.parseRoom(content);
+                    System.out.println("Parsed   room " + id + ".");
                     roomQueue.put(room);
+                    System.out.println("Put room " + id + " into queue.");
                 } catch (NoSuchElementException e) {
                     e.printStackTrace();
                 } catch (HttpFetcherException e) {
@@ -80,6 +83,8 @@ public class RoomCrawler {
                 } catch (InterruptedException e) {
                     // e.printStackTrace();
                     break;
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
                 try {
                     Thread.sleep(sleepSecond * 1000);
