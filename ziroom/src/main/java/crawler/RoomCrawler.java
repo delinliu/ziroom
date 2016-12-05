@@ -31,6 +31,11 @@ public class RoomCrawler {
         this.roomQueue = roomQueue;
     }
 
+    public void setSleepSecond(int sleepSecond) {
+        this.sleepSecond = sleepSecond;
+        System.out.println("Room crawler set [sleepSecond=" + sleepSecond + "]");
+    }
+
     public void startCrawler(int threadAmount, int sleepSecond) {
         if (isRunning) {
             return;
@@ -77,6 +82,12 @@ public class RoomCrawler {
                 } catch (ParserException e) {
                     if (RoomParser.errRoomNotFound.equals(e.getMessage())) {
                         System.out.println("No room found " + id);
+                        try {
+                            idSet.addBlack(id);
+                            System.out.println("Add to black " + id + ".");
+                        } catch (Exception ee) {
+                            ee.printStackTrace();
+                        }
                     } else {
                         e.printStackTrace();
                     }

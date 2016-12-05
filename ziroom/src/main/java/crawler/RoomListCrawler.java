@@ -33,6 +33,16 @@ public class RoomListCrawler {
         this.idSet = idSet;
     }
 
+    public void setSleepSecond(int sleepSecond) {
+        this.sleepSecond = sleepSecond;
+        System.out.println("Room list crawler set [sleepSecond=" + sleepSecond + "]");
+    }
+
+    public void setResetSecond(int resetSecond) {
+        this.resetSecond = resetSecond;
+        System.out.println("Room list crawler set [resetSecond=" + resetSecond + "]");
+    }
+
     public void startCrawler(int threadAmount, int sleepSecond, int resetSecond, String roomListUrl,
             boolean isExtendIds) {
         if (isRunning) {
@@ -71,6 +81,7 @@ public class RoomListCrawler {
 
     public void setCurrentPage(int currentPage) {
         this.currentPage.set(currentPage);
+        System.out.println("Room list crawler set [currentPage=" + currentPage + "]");
     }
 
     private void extendIds(Set<String> ids) {

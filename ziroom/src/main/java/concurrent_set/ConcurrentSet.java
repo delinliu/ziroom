@@ -10,11 +10,19 @@ public class ConcurrentSet implements ConcurrentSetInterface {
     private volatile Set<String> oldData = new HashSet<>();
     private volatile Set<String> newData = new HashSet<>();
     private volatile Iterator<String> it = oldData.iterator();
+    private volatile Set<String> blackData = new HashSet<>();
 
     @Override
     public void add(String value) {
         synchronized (newData) {
             newData.add(value);
+        }
+    }
+
+    @Override
+    public void addBlack(String value) {
+        synchronized (blackData) {
+            blackData.add(value);
         }
     }
 
@@ -26,6 +34,9 @@ public class ConcurrentSet implements ConcurrentSetInterface {
             } else {
                 synchronized (newData) {
                     oldData.addAll(newData);
+                    synchronized (blackData) {
+                        oldData.removeAll(blackData);
+                    }
                     newData.clear();
                 }
                 it = oldData.iterator();
@@ -46,6 +57,9 @@ public class ConcurrentSet implements ConcurrentSetInterface {
         synchronized (oldData) {
             synchronized (newData) {
                 oldData.addAll(newData);
+                synchronized (blackData) {
+                    oldData.removeAll(blackData);
+                }
                 newData.clear();
                 it = oldData.iterator();
                 return oldData.size();

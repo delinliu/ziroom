@@ -27,6 +27,13 @@ public interface ConcurrentSetInterface {
      * @return
      */
     String next();
+    
+    /**
+     * Add a black value.
+     * 
+     * @param value
+     */
+    void addBlack(String value);
 
     int size();
 }
