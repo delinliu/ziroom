@@ -39,7 +39,7 @@ public class Main {
         }
         BlockingQueue<Room> roomQueue = new ArrayBlockingQueue<>(1000);
         RoomCrawler crawler = new RoomCrawler(idSet, roomQueue);
-        crawler.startCrawler(1, 1);
+        crawler.startCrawler(3, 1);
         RoomUpdater updater = new RoomUpdater(roomQueue, database, roomMap, houseMap);
         updater.start();
 

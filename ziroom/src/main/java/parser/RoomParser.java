@@ -308,7 +308,7 @@ public class RoomParser implements RoomParserInterface {
         }
         int deposit = Integer.parseInt(matcher.group(1));
 
-        matcher = Pattern.compile("￥ *([0-9]+)元/年").matcher(serviceText);
+        matcher = Pattern.compile("￥ *([0-9]+)/年").matcher(serviceText);
         if (!matcher.find()) {
             throw new ParserException(errRoomPriceService, room.getRoomId());
         }
