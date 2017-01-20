@@ -31,7 +31,7 @@ final public class SimpleHttpFetcher implements HttpFetcher {
             }
 
             // Read the response data
-            BufferedReader in = new BufferedReader(new InputStreamReader(htCon.getInputStream()));
+            BufferedReader in = new BufferedReader(new InputStreamReader(htCon.getInputStream(), "UTF-8"));
             StringBuilder content = new StringBuilder();
             String line;
             while ((line = in.readLine()) != null) {
